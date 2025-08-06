@@ -11,7 +11,6 @@ public class PostResponse {
     private Long id;
     private SenderResponse user;
     private String content;
-    private String mediaUrl;
     private Visibility visibility;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -19,4 +18,5 @@ public class PostResponse {
     private int commentCount;
     private List<PostReactionResponse> reactions;
     private List<PostCommentResponse> comments;
+    private List<String> mediaUrls;
 } 
