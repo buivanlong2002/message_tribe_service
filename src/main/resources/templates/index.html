@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Giao diện Chat</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.1/css/all.min.css"/>
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+    <link href="/css/styles.css" rel="stylesheet"/>
+</head>
+<body class="light-mode">
+<div class="flex h-screen">
+    <!-- Sidebar trái -->
+    <div class="group-sidebar bg-white dark:bg-gray-800 overflow-y-auto flex flex-col transition-all duration-300">
+        <div class="p-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center gap-3">
+            <i class="fas fa-bars text-xl text-gray-600 dark:text-gray-300 cursor-pointer hover:text-black dark:hover:text-white transition" id="toggleSidebarBtn"></i>
+            <input type="text" class="w-full p-3 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none input-field text-base"
+                   placeholder="Tìm nhóm...">
+            <button id="toggleThemeBtn" class="text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white">
+                <i class="fas fa-moon text-lg"></i>
+            </button>
+        </div>
+
+        <!-- Danh sách nhóm -->
+        <div class="flex-grow overflow-y-auto">
+            <ul class="divide-y divide-gray-200 dark:divide-gray-700">
+                <li class="group-item flex items-start cursor-pointer p-4 hover:bg-gray-100 dark:hover:bg-gray-700"
+                    data-group="Lập trình Java" data-message="Bạn: Đã commit xong chưa?">
+                    <img src="https://via.placeholder.com/48" class="avatar rounded-full w-12 h-12 mr-3" alt="Avatar">
+                    <div class="flex-1">
+                        <div class="flex justify-between items-center">
+                            <h6 class="font-semibold text-gray-900 dark:text-gray-100 text-lg">Lập trình Java</h6>
+                            <span class="text-sm text-gray-500 dark:text-gray-400">12:45</span>
+                        </div>
+                        <p class="text-base text-gray-600 dark:text-gray-300 truncate">Bạn: Đã commit xong chưa?</p>
+                        <span class="badge bg-red-500 text-white text-xs rounded-full px-2 py-1">3</span>
+                    </div>
+                </li>
+                <li class="group-item flex items-start cursor-pointer p-4 hover:bg-gray-100 dark:hover:bg-gray-700"
+                    data-group="Đồ án 2025" data-message="Trang: Tối họp nhóm nha!">
+                    <img src="https://via.placeholder.com/48" class="avatar rounded-full w-12 h-12 mr-3" alt="Avatar">
+                    <div class="flex-1">
+                        <div class="flex justify-between items-center">
+                            <h6 class="font-semibold text-gray-900 dark:text-gray-100 text-lg">Đồ án 2025</h6>
+                            <span class="text-sm text-gray-500 dark:text-gray-400">11:15</span>
+                        </div>
+                        <p class="text-base text-gray-600 dark:text-gray-300 truncate">Trang: Tối họp nhóm nha!</p>
+                        <span class="badge bg-red-500 text-white text-xs rounded-full px-2 py-1">1</span>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Nội dung chat -->
+    <div class="chat-content flex-grow flex flex-row" id="chatContent"></div>
+</div>
+
+<!-- Overlay Menu -->
+<div class="overlay" id="menuOverlay">
+    <div class="overlay-content" id="overlayContent"></div>
+</div>
+
+<!-- Scripts -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script type="module" src="/js/main.js"></script>
+</body>
+</html>

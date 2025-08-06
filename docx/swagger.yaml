@@ -1,0 +1,141 @@
+openapi: 3.0.3
+info:
+  title: Message Service API
+  version: 1.0.0
+  description: API để đăng nhập và đăng ký người dùng
+
+paths:
+  /login:
+    post:
+      summary: Đăng nhập người dùng
+      description: Đăng nhập và nhận JWT token nếu thành công
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Phản hồi đăng nhập thành công hoặc lỗi nghiệp vụ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseString'
+        '500':
+          description: Lỗi hệ thống
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseString'
+
+  /register:
+    post:
+      summary: Đăng ký người dùng
+      description: Tạo mới tài khoản người dùng
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Đăng ký thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseString'
+        '400':
+          description: Dữ liệu không hợp lệ hoặc đã tồn tại
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseString'
+        '500':
+          description: Lỗi hệ thống
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseString'
+
+components:
+  schemas:
+    LoginRequest:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          example: "user123"
+          description: Tên đăng nhập của người dùng
+        password:
+          type: string
+          example: "password123"
+          description: Mật khẩu của người dùng
+
+    RegisterRequest:
+      type: object
+      required:
+        - username
+        - password
+        - displayName
+      properties:
+        username:
+          type: string
+          example: "user123"
+          description: Tên đăng nhập duy nhất
+        password:
+          type: string
+          example: "password123"
+          description: Mật khẩu tài khoản
+        displayName:
+          type: string
+          example: "Nguyễn Văn A"
+          description: Tên hiển thị người dùng
+        avatarUrl:
+          type: string
+          format: uri
+          example: "https://example.com/avatar.jpg"
+          description: URL ảnh đại diện
+        phoneNumber:
+          type: string
+          example: "0123456789"
+          description: Số điện thoại
+        email:
+          type: string
+          format: email
+          example: "user@example.com"
+          description: Địa chỉ email
+
+    ApiResponseString:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Mã trạng thái, ví dụ "00" là thành công
+          example: "00"
+        success:
+          type: boolean
+          description: Trạng thái thành công hay thất bại
+          example: true
+        message:
+          type: string
+          description: Thông điệp trả về từ server
+          example: "Đăng nhập thành công"
+        displayMessage:
+          type: string
+          description: Thông điệp hiển thị cho người dùng
+          example: "Đăng nhập thành công"
+        responseTime:
+          type: string
+          format: date-time
+          description: Thời gian phản hồi theo định dạng ISO 8601
+          example: "2025-05-27T13:00:00+07:00"
+        data:
+          type: string
+          nullable: true
+          description: Dữ liệu trả về (token JWT hoặc null)
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."

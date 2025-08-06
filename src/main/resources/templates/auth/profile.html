@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Trang nhắn tin</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            height: 100vh;
+        }
+
+        .sidebar {
+            width: 250px;
+            background-color: #2f3542;
+            color: white;
+            padding: 10px;
+            overflow-y: auto;
+        }
+
+        .sidebar h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .user {
+            padding: 10px;
+            border-bottom: 1px solid #444;
+            cursor: pointer;
+        }
+
+        .user:hover {
+            background-color: #57606f;
+        }
+
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-header {
+            background-color: #70a1ff;
+            padding: 10px;
+            color: white;
+            font-weight: bold;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 10px;
+            overflow-y: auto;
+            background-color: #f1f2f6;
+        }
+
+        .message {
+            margin: 5px 0;
+            padding: 8px 12px;
+            border-radius: 10px;
+            max-width: 60%;
+            clear: both;
+        }
+
+        .message.you {
+            background-color: #dff9fb;
+            float: right;
+            text-align: right;
+        }
+
+        .message.other {
+            background-color: #dcdde1;
+            float: left;
+            text-align: left;
+        }
+
+        .chat-input {
+            display: flex;
+            border-top: 1px solid #ccc;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            outline: none;
+        }
+
+        .chat-input button {
+            padding: 10px 20px;
+            border: none;
+            background-color: #1e90ff;
+            color: white;
+            cursor: pointer;
+        }
+
+        .chat-input button:hover {
+            background-color: #3742fa;
+        }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <h2>Người dùng</h2>
+    <div th:each="user : ${users}" class="user"
+         th:attr="data-id=${user.id}"
+         th:text="${user.username}"
+         th:onclick="'selectUser(' + '\'' + ${user.id} + '\',\'' + ${user.username} + '\'' + ')'">
+    </div>
+</div>
+
+<div class="chat-container">
+    <div class="chat-header" id="chat-header">Chọn người để nhắn tin</div>
+    <div class="chat-messages" id="chat-messages">
+        <!-- Tin nhắn sẽ hiển thị ở đây -->
+    </div>
+    <div class="chat-input">
+        <input type="text" id="message-input" placeholder="Nhập tin nhắn..." />
+        <button onclick="sendMessage()">Gửi</button>
+    </div>
+</div>
+
+<script>
+    let selectedUserId = null;
+    let selectedUsername = null;
+
+    function selectUser(userId, username) {
+        selectedUserId = userId;
+        selectedUsername = username;
+        document.getElementById('chat-header').innerText = 'Trò chuyện với: ' + username;
+        document.getElementById('chat-messages').innerHTML = '';
+    }
+
+    function sendMessage() {
+        const input = document.getElementById('message-input');
+        const message = input.value.trim();
+        if (!message || !selectedUserId) return;
+
+        const msgElem = document.createElement('div');
+        msgElem.classList.add('message', 'you');
+        msgElem.innerText = message;
+        document.getElementById('chat-messages').appendChild(msgElem);
+
+        input.value = '';
+
+        fetch('/messages', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                toUserId: selectedUserId,
+                content: message
+            })
+        });
+    }
+</script>
+
+</body>
+</html>
