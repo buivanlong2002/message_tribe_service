@@ -26,12 +26,10 @@ public class Post {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    private User user; // Giả định bạn đã có User Entity
+    private User user;
 
     @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
-
-    private String mediaUrl;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -50,5 +48,8 @@ public class Post {
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PostComment> comments = new ArrayList<>();
+
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PostMedia> media = new ArrayList<>();
 }
 

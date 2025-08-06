@@ -99,7 +99,6 @@ CREATE TABLE `posts`
 (
     `id`         bigint       NOT NULL AUTO_INCREMENT,
     `content`    text         NOT NULL,
-    `media_url`  varchar(255) DEFAULT NULL,
     `visibility` enum('PUBLIC','PRIVATE','FRIENDS') NOT NULL DEFAULT 'PUBLIC',
     `created_at` datetime(6)  NOT NULL,
     `updated_at` datetime(6)  DEFAULT NULL,
@@ -143,4 +142,16 @@ CREATE TABLE `post_reactions`
     KEY `fk_post_reactions_user` (`user_id`),
     CONSTRAINT `fk_post_reactions_post` FOREIGN KEY (`post_id`) REFERENCES `posts` (`id`),
     CONSTRAINT `fk_post_reactions_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+
+-- Post media table
+CREATE TABLE `post_media`
+(
+    `id`        bigint       NOT NULL AUTO_INCREMENT,
+    `media_url` varchar(255) NOT NULL,
+    `media_type` varchar(255) NOT NULL,
+    `post_id`   bigint       NOT NULL,
+    PRIMARY KEY (`id`),
+    KEY `fk_post_media_post` (`post_id`),
+    CONSTRAINT `fk_post_media_post` FOREIGN KEY (`post_id`) REFERENCES `posts` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci

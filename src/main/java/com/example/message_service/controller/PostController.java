@@ -6,6 +6,10 @@ import com.example.message_service.dto.request.UpdatePostRequest;
 import com.example.message_service.dto.response.PostResponse;
 import com.example.message_service.model.Visibility;
 import com.example.message_service.service.PostService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -17,29 +21,27 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/posts")
 public class PostController {
-
-    private final PostService postService;
-
     @Autowired
-    public PostController(PostService postService) {
-        this.postService = postService;
-    }
+    private PostService postService;
+    @Autowired
+    private ObjectMapper objectMapper;
 
-    // Tạo post mới
+
     @PostMapping(value = "/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<PostResponse> createPost(
-            @RequestParam String userId,
-            @RequestParam String content,
-            @RequestParam(required = false) String mediaUrl,
-            @RequestParam(defaultValue = "PUBLIC") Visibility visibility,
-            @RequestPart(required = false) MultipartFile[] files
-    ) {
-        CreatePostRequest request = new CreatePostRequest();
-        request.setContent(content);
-        request.setMediaUrl(mediaUrl);
-        request.setVisibility(visibility);
+            @RequestParam("metadata") String metadata,
+            @RequestPart(value = "files", required = false) MultipartFile[] files
+    ) throws JsonProcessingException {
+        // Convert String JSON -> CreatePostRequest object
+        CreatePostRequest request = objectMapper.readValue(metadata, CreatePostRequest.class);
+        return postService.createPost(request.getUserId(), request, files);
+    }
 
-        return postService.createPost(userId, request);
+
+    // Tạo post đơn giản (không có file)
+    @PostMapping(value = "/create-simple", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ApiResponse<PostResponse> createPostSimple(@RequestBody @Valid @NotNull CreatePostRequest request) {
+        return postService.createPost(request.getUserId(), request, null);
     }
 
     // Lấy post theo ID
@@ -78,13 +80,24 @@ public class PostController {
     }
 
     // Cập nhật post
-    @PutMapping("/{postId}")
+    @PutMapping(value = "/{postId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<PostResponse> updatePost(
             @PathVariable Long postId,
             @RequestParam String userId,
-            @RequestBody UpdatePostRequest request
+            @RequestPart("metadata") @Valid @NotNull UpdatePostRequest request,
+            @RequestPart(value = "files", required = false) MultipartFile[] files
     ) {
-        return postService.updatePost(postId, userId, request);
+        return postService.updatePost(postId, userId, request, files);
+    }
+
+    // Cập nhật post đơn giản (không có file)
+    @PutMapping(value = "/{postId}/simple", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ApiResponse<PostResponse> updatePostSimple(
+            @PathVariable Long postId,
+            @RequestParam String userId,
+            @RequestBody @Valid @NotNull UpdatePostRequest request
+    ) {
+        return postService.updatePost(postId, userId, request, null);
     }
 
     // Xóa post
@@ -104,5 +117,15 @@ public class PostController {
             @RequestParam(defaultValue = "20") int size
     ) {
         return postService.searchPosts(keyword, page, size);
+    }
+
+    // Xóa media của post
+    @DeleteMapping("/{postId}/media/{mediaId}")
+    public ApiResponse<String> deletePostMedia(
+            @PathVariable Long postId,
+            @PathVariable Long mediaId,
+            @RequestParam String userId
+    ) {
+        return postService.deletePostMedia(postId, mediaId, userId);
     }
 } 

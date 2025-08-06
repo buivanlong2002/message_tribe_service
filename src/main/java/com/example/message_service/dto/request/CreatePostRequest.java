@@ -5,7 +5,8 @@ import lombok.Data;
 
 @Data
 public class CreatePostRequest {
+    private String userId;
     private String content;
-    private String mediaUrl;
     private Visibility visibility = Visibility.PUBLIC;
-} 
+}
+
