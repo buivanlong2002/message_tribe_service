@@ -265,7 +265,7 @@ public class PostService {
         if (post.getUser() != null) {
             SenderResponse userResponse = new SenderResponse();
             userResponse.setSenderId(post.getUser().getId());
-            userResponse.setNameSender(post.getUser().getUsername());
+            userResponse.setNameSender(post.getUser().getDisplayName() );
             response.setUser(userResponse);
         }
 
