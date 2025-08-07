@@ -97,9 +97,11 @@ public class UserController {
 
     // Tìm người dùng theo tên hiển thị
     @GetMapping("/search-by-name")
-    public List<User> searchUsersByDisplayName(@RequestParam String name) {
-        return userService.searchByDisplayName(name);
+    public ApiResponse<List<User>> searchUsersByDisplayName(@RequestParam String name) {
+        List<User> users = userService.searchByDisplayName(name);
+        return ApiResponse.success("Tìm kiếm thành công", users);
     }
+
 
 
 }
