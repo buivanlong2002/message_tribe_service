@@ -95,4 +95,11 @@ public class UserController {
         }
     }
 
+    // Tìm người dùng theo tên hiển thị
+    @GetMapping("/search-by-name")
+    public List<User> searchUsersByDisplayName(@RequestParam String name) {
+        return userService.searchByDisplayName(name);
+    }
+
+
 }

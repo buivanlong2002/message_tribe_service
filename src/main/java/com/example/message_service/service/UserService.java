@@ -256,4 +256,8 @@ public class UserService {
         return userRepository.save(user);
     }
 
+    public List<User> searchByDisplayName(String displayName) {
+        return userRepository.findByDisplayNameContainingIgnoreCase(displayName);
+    }
+
 }
