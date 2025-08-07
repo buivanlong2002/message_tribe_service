@@ -19,4 +19,7 @@ public interface UserRepository extends JpaRepository<User, String> {
 
     @Query("SELECT u FROM User u WHERE u.email LIKE %:email%")
     List<User> searchByEmail(@Param("email") String email);
+
+    List<User> findByDisplayNameContainingIgnoreCase(String displayName);
+
 }
