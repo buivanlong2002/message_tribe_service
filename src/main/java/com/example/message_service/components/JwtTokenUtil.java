@@ -35,7 +35,7 @@ public class JwtTokenUtil {
     public String generateToken(User user) throws Exception {
         Map<String, Object> claims = new HashMap<>();
         claims.put("id", user.getId());
-        claims.put("name", user.getUsername());
+        claims.put("name", user.getDisplayName());
         claims.put("email", user.getEmail()); // Optional: vẫn có thể lưu trong claims
 
         PrivateKey privateKey = keyProvider.getPrivateKey();
@@ -46,7 +46,7 @@ public class JwtTokenUtil {
                     .setSubject(user.getUsername()) // Đặt username làm subject
                     .setIssuedAt(new Date())
                     .setExpiration(new Date(System.currentTimeMillis() + expiration * 1000L))
-                    .signWith(privateKey, SignatureAlgorithm.RS256)
+                    .signWith(privateKey, SignatureAlgorithm.RS256)git
                     .compact();
         } catch (Exception e) {
             logger.error("Error generating token: {}", e.getMessage());
