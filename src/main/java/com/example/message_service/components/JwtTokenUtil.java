@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
-
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Date;
@@ -46,7 +45,7 @@ public class JwtTokenUtil {
                     .setSubject(user.getUsername()) // Đặt username làm subject
                     .setIssuedAt(new Date())
                     .setExpiration(new Date(System.currentTimeMillis() + expiration * 1000L))
-                    .signWith(privateKey, SignatureAlgorithm.RS256)git
+                    .signWith(privateKey, SignatureAlgorithm.RS256)
                     .compact();
         } catch (Exception e) {
             logger.error("Error generating token: {}", e.getMessage());
