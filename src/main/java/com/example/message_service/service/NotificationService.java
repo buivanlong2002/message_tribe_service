@@ -2,11 +2,14 @@ package com.example.message_service.service;
 
 import java.util.List;
 
+import org.springframework.stereotype.Service;
+
 import com.example.message_service.model.Notification;
 import com.example.message_service.model.NotificationType;
 import com.example.message_service.model.User;
 import com.example.message_service.repository.NotificationRepository;
 
+@Service
 public class NotificationService {
     private final NotificationRepository notificationRepository;
 
