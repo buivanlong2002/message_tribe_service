@@ -46,7 +46,7 @@ public class JwtTokenUtil {
                     .setSubject(user.getUsername()) // Đặt username làm subject
                     .setIssuedAt(new Date())
                     .setExpiration(new Date(System.currentTimeMillis() + expiration * 1000L))
-                    .signWith(privateKey, SignatureAlgorithm.RS256)git
+                    .signWith(privateKey, SignatureAlgorithm.RS256)
                     .compact();
         } catch (Exception e) {
             logger.error("Error generating token: {}", e.getMessage());
