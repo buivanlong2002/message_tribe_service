@@ -168,7 +168,8 @@ public class UserService {
     public boolean resetPassword(String token, String newPassword) {
         Optional<PasswordResetToken> tokenOpt = passwordResetTokenRepository.findByToken(token);
 
-        if (tokenOpt.isEmpty()) return false;
+        if (tokenOpt.isEmpty())
+            return false;
 
         PasswordResetToken resetToken = tokenOpt.get();
 
@@ -212,11 +213,11 @@ public class UserService {
             if (request.getCurrentPassword() == null || request.getCurrentPassword().trim().isEmpty()) {
                 return ApiResponse.error("02", "Mật khẩu hiện tại không được để trống");
             }
-            
+
             if (request.getNewPassword() == null || request.getNewPassword().trim().isEmpty()) {
                 return ApiResponse.error("03", "Mật khẩu mới không được để trống");
             }
-            
+
             if (request.getNewPassword().length() < 6) {
                 return ApiResponse.error("04", "Mật khẩu mới phải có ít nhất 6 ký tự");
             }
@@ -258,6 +259,11 @@ public class UserService {
 
     public List<User> searchByDisplayName(String displayName) {
         return userRepository.findByDisplayNameContainingIgnoreCase(displayName);
+    }
+
+    // lấy người dùng theo id
+    public User getUserById(String userId) {
+        return userRepository.findById(userId).orElse(null);
     }
 
 }

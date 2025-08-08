@@ -1,15 +1,21 @@
 package com.example.message_service.repository;
 
-import com.example.message_service.model.Notification;
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.UUID;
+import com.example.message_service.model.Notification;
+import com.example.message_service.model.User;
+
 @Repository
-public interface NotificationRepository extends JpaRepository<Notification, String> {
+public interface NotificationRepository extends JpaRepository<Notification, Long> {
+    // Tìm tất cả thông báo của người dùng theo trạng thái đã đọc
+    List<Notification> findByReceiverAndIsRead(User receiver, boolean isRead);
 
-    List<Notification> findByUserId(String userId);
+    // Xóa thông báo theo người nhận
+    void deleteByReceiver(User receiver);
 
-    List<Notification> findByUserIdAndRead(String userId, boolean isRead);
+    // Tìm tất cả thông báo của người dùng
+    List<Notification> findByReceiver(User receiver);
 }
