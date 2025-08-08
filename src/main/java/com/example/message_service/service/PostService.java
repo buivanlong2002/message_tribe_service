@@ -46,9 +46,9 @@ public class PostService {
     @Autowired
     private FileStorageService fileStorageService;
 
-
     @Autowired
     private PostMediaRepository postMediaRepository;
+
     // Tạo post mới
     @Transactional
     public ApiResponse<PostResponse> createPost(String userId, CreatePostRequest request, MultipartFile[] files) {
@@ -68,7 +68,7 @@ public class PostService {
             // Xử lý upload file (nếu có)
             if (files != null && files.length > 0) {
                 for (MultipartFile file : files) {
-                    String url = fileStorageService.uploadFile(file);  // Upload file & lấy URL
+                    String url = fileStorageService.uploadFile(file); // Upload file & lấy URL
                     // Tạo PostMedia entity nếu có
                     PostMedia media = new PostMedia(savedPost, url, file.getContentType());
                     postMediaRepository.save(media);
@@ -80,8 +80,6 @@ public class PostService {
             return ApiResponse.error("01", "Lỗi khi tạo post: " + e.getMessage());
         }
     }
-
-
 
     // Lấy post theo ID
     public ApiResponse<PostResponse> getPostById(Long postId) {
@@ -149,7 +147,8 @@ public class PostService {
 
     // Cập nhật post
     @Transactional
-    public ApiResponse<PostResponse> updatePost(Long postId, String userId, UpdatePostRequest request, MultipartFile[] files) {
+    public ApiResponse<PostResponse> updatePost(Long postId, String userId, UpdatePostRequest request,
+            MultipartFile[] files) {
         try {
             Post post = postRepository.findById(postId)
                     .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy post"));
@@ -265,7 +264,7 @@ public class PostService {
         if (post.getUser() != null) {
             SenderResponse userResponse = new SenderResponse();
             userResponse.setSenderId(post.getUser().getId());
-            userResponse.setNameSender(post.getUser().getDisplayName() );
+            userResponse.setNameSender(post.getUser().getDisplayName());
             response.setUser(userResponse);
         }
 
@@ -290,4 +289,9 @@ public class PostService {
 
         return response;
     }
-} 
+
+    // lấy chủ nhân bài viết
+    public User getPostOwner(Long postId) {
+        return postRepository.findPostOwner(postId);
+    }
+}
