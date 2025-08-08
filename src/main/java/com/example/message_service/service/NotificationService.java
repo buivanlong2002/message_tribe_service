@@ -3,6 +3,7 @@ package com.example.message_service.service;
 import java.util.List;
 
 import com.example.message_service.model.Notification;
+import com.example.message_service.model.NotificationType;
 import com.example.message_service.model.User;
 import com.example.message_service.repository.NotificationRepository;
 
@@ -14,7 +15,11 @@ public class NotificationService {
     }
 
     // Thêm thông báo
-    public Notification createNotification(Notification notification) {
+    public Notification createNotification(NotificationType type, User receiver, String message) {
+        Notification notification = new Notification();
+        notification.setType(type);
+        notification.setReceiver(receiver);
+        notification.setContent(message);
         return notificationRepository.save(notification);
     }
 
