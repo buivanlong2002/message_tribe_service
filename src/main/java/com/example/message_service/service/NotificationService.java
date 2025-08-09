@@ -2,11 +2,14 @@ package com.example.message_service.service;
 
 import java.util.List;
 
+import org.springframework.stereotype.Service;
+
 import com.example.message_service.model.Notification;
 import com.example.message_service.model.NotificationType;
 import com.example.message_service.model.User;
 import com.example.message_service.repository.NotificationRepository;
 
+@Service
 public class NotificationService {
     private final NotificationRepository notificationRepository;
 
@@ -15,11 +18,11 @@ public class NotificationService {
     }
 
     // Thêm thông báo
-    public Notification createNotification(NotificationType type, User receiver, String message) {
+    public Notification createNotification(NotificationType type, User receiver, String content) {
         Notification notification = new Notification();
         notification.setType(type);
         notification.setReceiver(receiver);
-        notification.setContent(message);
+        notification.setContent(content);
         return notificationRepository.save(notification);
     }
 

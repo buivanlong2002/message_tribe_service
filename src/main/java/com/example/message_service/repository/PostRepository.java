@@ -1,6 +1,7 @@
 package com.example.message_service.repository;
 
 import com.example.message_service.model.Post;
+import com.example.message_service.model.User;
 import com.example.message_service.model.Visibility;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -38,4 +39,9 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     // Đếm số posts theo visibility
     long countByVisibility(Visibility visibility);
+
+
+    // lấy chủ nhân bài viết
+    @Query("SELECT p.user FROM Post p WHERE p.id = :postId")
+    User findPostOwner(@Param("postId") Long postId);
 } 
