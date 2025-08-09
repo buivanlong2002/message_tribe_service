@@ -1,50 +1,39 @@
 package com.example.message_service.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
-
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Entity
 @Table(name = "notifications")
-@Setter
 @Getter
-@AllArgsConstructor
+@Setter
+@Builder
 @NoArgsConstructor
+@AllArgsConstructor
 public class Notification {
-
     @Id
-    private String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    @JsonIgnore
-    private User user;
+    // Ai nhận thông báo
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "receiver_id", nullable = false)
+    private User receiver;
 
-    @Column(nullable = false)
-    private String type;
+    // Loại thông báo (dùng String cho linh hoạt)
+    @Column(nullable = false, length = 50)
+    private NotificationType type;
 
-    @Column(nullable = false)
+    // Nội dung thông báo
+    @Column(nullable = false, length = 500)
     private String content;
 
-    private String extraData;
+    // Trạng thái đã đọc
+    @Column(nullable = false)
+    private boolean isRead = false;
 
-    @Column(name = "is_read", nullable = false)
-    private boolean read;
-
-    private LocalDateTime readAt;
-
-    @Column(nullable = false, updatable = false)
+    // Thời điểm tạo
+    @Column(nullable = false)
     private LocalDateTime createdAt;
-
-    @PrePersist
-    public void prePersist() {
-        if (this.id == null || this.id.isEmpty()) {
-            this.id = UUID.randomUUID().toString();
-        }
-        this.createdAt = LocalDateTime.now();
-        this.read = false;
-    }
 }
