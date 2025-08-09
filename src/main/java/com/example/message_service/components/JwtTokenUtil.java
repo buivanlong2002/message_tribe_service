@@ -100,7 +100,7 @@ public class JwtTokenUtil {
     }
 
     /**
-     * Kiểm tra token hợp lệ (username trùng và chưa hết hạn)
+     * Kiểm tra username trong token hợp lệ có khớp với userdetail (username trùng và chưa hết hạn)
      */
     public boolean validateToken(String token, UserDetails userDetails) {
         final String email = extractUsername(token);
