@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
-
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Date;
@@ -101,7 +100,7 @@ public class JwtTokenUtil {
     }
 
     /**
-     * Kiểm tra token hợp lệ (username trùng và chưa hết hạn)
+     * Kiểm tra username trong token hợp lệ có khớp với userdetail (username trùng và chưa hết hạn)
      */
     public boolean validateToken(String token, UserDetails userDetails) {
         final String email = extractUsername(token);
