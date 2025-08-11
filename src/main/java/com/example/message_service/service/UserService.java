@@ -90,6 +90,7 @@ public class UserService {
         user.setAvatarUrl(request.getAvatarUrl());
         user.setPhoneNumber(request.getPhoneNumber());
         user.setEmail(request.getEmail());
+        user.setBirthday(request.getBirthday());
 
         userRepository.save(user);
 
