@@ -4,6 +4,8 @@ import com.example.message_service.components.JwtTokenUtil;
 import com.example.message_service.dto.ApiResponse;
 import com.example.message_service.dto.request.LoginRequest;
 import com.example.message_service.dto.request.RegisterRequest;
+import com.example.message_service.dto.request.ResetPasswordWithOTPRequest;
+import com.example.message_service.dto.request.VerifyOTPRequest;
 import com.example.message_service.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,14 +71,26 @@ public class AuthController {
         }
     }
 
-    // ==== 5. Quên mật khẩu ====
+    // ==== 5. Quên mật khẩu - Gửi OTP ====
     @PostMapping("/forgot-password")
     public ResponseEntity<ApiResponse<String>> forgotPassword(@RequestBody Map<String, String> body) {
         String email = body.get("email");
         return ResponseEntity.ok(userService.requestPasswordReset(email));
     }
 
-    // ==== 6. Đặt lại mật khẩu bằng token ====
+    // ==== 6. Xác thực OTP ====
+    @PostMapping("/verify-otp")
+    public ResponseEntity<ApiResponse<String>> verifyOTP(@Valid @RequestBody VerifyOTPRequest request) {
+        return ResponseEntity.ok(userService.verifyOTP(request.getEmail(), request.getOtp()));
+    }
+
+    // ==== 7. Đặt lại mật khẩu bằng OTP ====
+    @PostMapping("/reset-password-otp")
+    public ResponseEntity<ApiResponse<String>> resetPasswordWithOTP(@Valid @RequestBody ResetPasswordWithOTPRequest request) {
+        return ResponseEntity.ok(userService.resetPasswordWithOTP(request.getEmail(), request.getOtp(), request.getNewPassword()));
+    }
+
+    // ==== 8. Đặt lại mật khẩu bằng token (giữ lại để tương thích ngược) ====
     @PostMapping("/reset-password")
     public ResponseEntity<ApiResponse<String>> resetPassword(@RequestBody Map<String, String> body) {
         String token = body.get("token");

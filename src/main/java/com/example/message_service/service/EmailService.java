@@ -29,4 +29,19 @@ public class EmailService {
 
         mailSender.send(message);
     }
+
+    public void sendOTPEmail(String to, String otp) {
+        String subject = "TomoTalk - Mã OTP đặt lại mật khẩu";
+        String text = "Bạn đã yêu cầu đặt lại mật khẩu cho tài khoản TomoTalk.\n\n"
+                + "Mã OTP của bạn là: " + otp + "\n\n"
+                + "Mã này sẽ hết hạn sau 5 phút.\n\n"
+                + "Nếu bạn không yêu cầu, vui lòng bỏ qua email này.";
+
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(to);
+        message.setSubject(subject);
+        message.setText(text);
+
+        mailSender.send(message);
+    }
 }
