@@ -156,7 +156,7 @@ public class UserService {
         passwordResetOTPRepository.deleteByUser(user);
 
         // Tạo OTP mới (6 số)
-        String otp = String.format("%06d", (int)(Math.random() * 1000000));
+        String otp = String.format("%06d", (int) (Math.random() * 1000000));
         PasswordResetOTP resetOTP = new PasswordResetOTP();
         resetOTP.setOtp(otp);
         resetOTP.setUser(user);
@@ -173,7 +173,7 @@ public class UserService {
     @Transactional
     public ApiResponse<String> verifyOTP(String email, String otp) {
         Optional<User> userOpt = userRepository.findByEmail(email);
-        
+
         if (userOpt.isEmpty()) {
             return ApiResponse.error("01", "Email không tồn tại");
         }
@@ -202,7 +202,7 @@ public class UserService {
     @Transactional
     public ApiResponse<String> resetPasswordWithOTP(String email, String otp, String newPassword) {
         Optional<User> userOpt = userRepository.findByEmail(email);
-        
+
         if (userOpt.isEmpty()) {
             return ApiResponse.error("01", "Email không tồn tại");
         }
@@ -324,6 +324,10 @@ public class UserService {
 
         if (request.getAvatarUrl() != null) {
             user.setAvatarUrl(request.getAvatarUrl());
+        }
+
+        if (request.getBirthday() != null) {
+            user.setBirthday(request.getBirthday());
         }
 
         return userRepository.save(user);

@@ -11,4 +11,5 @@ public class UpdateProfileRequest {
     private String phoneNumber;
     private String email;
     private String avatarUrl;
+    private String birthday; // yyyy-MM-dd
 }
