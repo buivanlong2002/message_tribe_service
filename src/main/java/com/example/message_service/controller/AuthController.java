@@ -90,17 +90,5 @@ public class AuthController {
         return ResponseEntity.ok(userService.resetPasswordWithOTP(request.getEmail(), request.getOtp(), request.getNewPassword()));
     }
 
-    // ==== 8. Đặt lại mật khẩu bằng token (giữ lại để tương thích ngược) ====
-    @PostMapping("/reset-password")
-    public ResponseEntity<ApiResponse<String>> resetPassword(@RequestBody Map<String, String> body) {
-        String token = body.get("token");
-        String newPassword = body.get("newPassword");
 
-        boolean success = userService.resetPassword(token, newPassword);
-        if (!success) {
-            return ResponseEntity.badRequest()
-                    .body(ApiResponse.error("01", "Token không hợp lệ hoặc đã hết hạn"));
-        }
-        return ResponseEntity.ok(ApiResponse.success("00", "Mật khẩu đã được đặt lại thành công"));
-    }
 }

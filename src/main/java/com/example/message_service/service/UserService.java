@@ -235,29 +235,7 @@ public class UserService {
         return ApiResponse.success("00", "Mật khẩu đã được đặt lại thành công");
     }
 
-    // Giữ lại method cũ để tương thích ngược (nếu cần)
-    @Transactional
-    public boolean resetPassword(String token, String newPassword) {
-        Optional<PasswordResetToken> tokenOpt = passwordResetTokenRepository.findByToken(token);
 
-        if (tokenOpt.isEmpty())
-            return false;
-
-        PasswordResetToken resetToken = tokenOpt.get();
-
-        if (resetToken.getExpiryDate().isBefore(LocalDateTime.now())) {
-            return false; // Token hết hạn
-        }
-
-        User user = resetToken.getUser();
-        user.setPassword(passwordEncoder.encode(newPassword));
-        userRepository.save(user);
-
-        // Xoá token sau khi sử dụng
-        passwordResetTokenRepository.delete(resetToken);
-
-        return true;
-    }
 
     public List<User> searchByEmail(String email) {
         return userRepository.searchByEmail(email);
