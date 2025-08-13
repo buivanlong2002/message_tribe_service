@@ -54,6 +54,15 @@ public class UserService {
     private String uploadDir;
 
     /**
+     * Cập nhật thông tin đăng nhập của người dùng
+     */
+    private void updateLoginInfo(User user) {
+        user.setLastLoginAt(LocalDateTime.now());
+        user.setLoginCount(user.getLoginCount() + 1);
+        userRepository.save(user);
+    }
+
+    /**
      * Đăng nhập người dùng và sinh token
      */
     public ApiResponse<String> loginUser(String email, String password) throws Exception {
@@ -68,6 +77,9 @@ public class UserService {
         if (!passwordEncoder.matches(password, user.getPassword())) {
             return ApiResponse.error("02", "Mật khẩu không đúng");
         }
+
+        // Cập nhật thông tin đăng nhập
+        updateLoginInfo(user);
 
         String token = jwtTokenUtil.generateToken(user);
         long expirationTime = jwtTokenUtil.getExpirationTime(token);

@@ -36,6 +36,7 @@ public class JwtTokenUtil {
         claims.put("id", user.getId());
         claims.put("name", user.getDisplayName());
         claims.put("email", user.getEmail()); // Optional: vẫn có thể lưu trong claims
+        claims.put("role", user.getRole().name());
 
         PrivateKey privateKey = keyProvider.getPrivateKey();
 
