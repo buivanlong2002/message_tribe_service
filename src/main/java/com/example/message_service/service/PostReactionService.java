@@ -147,7 +147,8 @@ public class PostReactionService {
         if (reaction.getUser() != null) {
             SenderResponse userResponse = new SenderResponse();
             userResponse.setSenderId(reaction.getUser().getId());
-            userResponse.setNameSender(reaction.getUser().getUsername());
+            userResponse.setNameSender(reaction.getUser().getDisplayName() != null ? reaction.getUser().getDisplayName() : "Người dùng");
+            userResponse.setAvatarSender(reaction.getUser().getAvatarUrl());
             response.setUser(userResponse);
         }
 
