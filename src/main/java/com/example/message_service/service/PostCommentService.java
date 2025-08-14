@@ -219,7 +219,8 @@ public class PostCommentService {
         if (comment.getUser() != null) {
             SenderResponse userResponse = new SenderResponse();
             userResponse.setSenderId(comment.getUser().getId());
-            userResponse.setNameSender(comment.getUser().getUsername());
+            userResponse.setNameSender(comment.getUser().getDisplayName() != null ? comment.getUser().getDisplayName() : "Người dùng");
+            userResponse.setAvatarSender(comment.getUser().getAvatarUrl());
             response.setUser(userResponse);
         }
 
