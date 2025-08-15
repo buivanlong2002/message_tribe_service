@@ -46,9 +46,9 @@ public class PostService {
     @Autowired
     private FileStorageService fileStorageService;
 
-
     @Autowired
     private PostMediaRepository postMediaRepository;
+
     // Tạo post mới
     @Transactional
     public ApiResponse<PostResponse> createPost(String userId, CreatePostRequest request, MultipartFile[] files) {
@@ -68,7 +68,7 @@ public class PostService {
             // Xử lý upload file (nếu có)
             if (files != null && files.length > 0) {
                 for (MultipartFile file : files) {
-                    String url = fileStorageService.uploadFile(file);  // Upload file & lấy URL
+                    String url = fileStorageService.uploadFile(file); // Upload file & lấy URL
                     // Tạo PostMedia entity nếu có
                     PostMedia media = new PostMedia(savedPost, url, file.getContentType());
                     postMediaRepository.save(media);
@@ -80,8 +80,6 @@ public class PostService {
             return ApiResponse.error("01", "Lỗi khi tạo post: " + e.getMessage());
         }
     }
-
-
 
     // Lấy post theo ID
     public ApiResponse<PostResponse> getPostById(Long postId) {
@@ -149,10 +147,19 @@ public class PostService {
 
     // Cập nhật post
     @Transactional
-    public ApiResponse<PostResponse> updatePost(Long postId, String userId, UpdatePostRequest request, MultipartFile[] files) {
+    public ApiResponse<PostResponse> updatePost(Long postId, String userId, UpdatePostRequest request,
+            MultipartFile[] files) {
         try {
+            System.out.println("PostService.updatePost - postId: " + postId + ", userId: " + userId);
+            System.out.println("Request content: " + request.getContent());
+            System.out.println("Request visibility: " + request.getVisibility());
+            System.out.println("Files count: " + (files != null ? files.length : 0));
+            
+            // Kiểm tra post tồn tại
             Post post = postRepository.findById(postId)
                     .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy post"));
+
+            System.out.println("Found post: " + post.getId() + ", user: " + post.getUser().getId());
 
             if (!post.getUser().getId().equals(userId)) {
                 return ApiResponse.error("01", "Không có quyền cập nhật post này");
@@ -162,6 +169,7 @@ public class PostService {
                 return ApiResponse.error("01", "Post đã bị xóa");
             }
 
+            // Cập nhật nội dung post
             if (request.getContent() != null) {
                 post.setContent(request.getContent());
             }
@@ -170,19 +178,64 @@ public class PostService {
             }
 
             post.setUpdatedAt(LocalDateTime.now());
+            System.out.println("Saving updated post...");
             Post updatedPost = postRepository.save(post);
+            System.out.println("Post saved successfully with ID: " + updatedPost.getId());
 
             // Xử lý upload file mới (nếu có)
             if (files != null && files.length > 0) {
-                for (MultipartFile file : files) {
-                    String url = fileStorageService.uploadFile(file);
-                    PostMedia media = new PostMedia(updatedPost, url, file.getContentType());
-                    postMediaRepository.save(media);
+                System.out.println("Processing " + files.length + " files...");
+                for (int i = 0; i < files.length; i++) {
+                    MultipartFile file = files[i];
+                    try {
+                        System.out.println("Processing file " + i + ": " + file.getOriginalFilename() + 
+                                         ", size: " + file.getSize() + ", type: " + file.getContentType());
+                        
+                        if (file == null) {
+                            System.out.println("Warning: File " + i + " is null, skipping...");
+                            continue;
+                        }
+                        
+                        if (file.isEmpty()) {
+                            System.out.println("Warning: File " + i + " is empty, skipping...");
+                            continue;
+                        }
+                        
+                        // Upload file
+                        System.out.println("Uploading file " + i + "...");
+                        String url = fileStorageService.uploadFile(file);
+                        System.out.println("File " + i + " uploaded to: " + url);
+                        
+                        // Tạo PostMedia entity
+                        PostMedia media = new PostMedia(updatedPost, url, file.getContentType());
+                        System.out.println("Creating PostMedia entity for file " + i + ": " + media);
+                        
+                        // Lưu PostMedia
+                        PostMedia savedMedia = postMediaRepository.save(media);
+                        System.out.println("PostMedia " + i + " saved with ID: " + savedMedia.getId());
+                        
+                    } catch (Exception e) {
+                        System.err.println("Error processing file " + i + " (" + file.getOriginalFilename() + "): " + e.getMessage());
+                        e.printStackTrace();
+                        // Không throw exception ngay, tiếp tục xử lý các file khác
+                        System.err.println("Continuing with other files...");
+                    }
                 }
             }
 
-            return ApiResponse.success("00", "Cập nhật post thành công", convertToResponse(updatedPost));
+            // Convert và trả về response
+            System.out.println("Converting post to response...");
+            PostResponse response = convertToResponse(updatedPost);
+            System.out.println("Response converted successfully");
+            
+            return ApiResponse.success("00", "Cập nhật post thành công", response);
+            
+        } catch (EntityNotFoundException e) {
+            System.err.println("EntityNotFoundException in updatePost: " + e.getMessage());
+            return ApiResponse.error("01", e.getMessage());
         } catch (Exception e) {
+            System.err.println("Error in PostService.updatePost: " + e.getMessage());
+            e.printStackTrace();
             return ApiResponse.error("01", "Lỗi khi cập nhật post: " + e.getMessage());
         }
     }
@@ -254,40 +307,91 @@ public class PostService {
 
     // Convert Post entity to PostResponse
     private PostResponse convertToResponse(Post post) {
-        PostResponse response = new PostResponse();
-        response.setId(post.getId());
-        response.setContent(post.getContent());
-        response.setVisibility(post.getVisibility());
-        response.setCreatedAt(post.getCreatedAt());
-        response.setUpdatedAt(post.getUpdatedAt());
+        try {
+            System.out.println("Converting post " + post.getId() + " to response...");
+            
+            PostResponse response = new PostResponse();
+            response.setId(post.getId());
+            response.setContent(post.getContent());
+            response.setVisibility(post.getVisibility());
+            response.setCreatedAt(post.getCreatedAt());
+            response.setUpdatedAt(post.getUpdatedAt());
 
-        // Set user info
-        if (post.getUser() != null) {
-            SenderResponse userResponse = new SenderResponse();
-            userResponse.setSenderId(post.getUser().getId());
-            userResponse.setNameSender(post.getUser().getDisplayName() );
-            response.setUser(userResponse);
+            // Set user info
+            if (post.getUser() != null) {
+                System.out.println("Setting user info for user: " + post.getUser().getId());
+                SenderResponse userResponse = new SenderResponse();
+                userResponse.setSenderId(post.getUser().getId());
+                userResponse.setNameSender(post.getUser().getDisplayName() != null ? post.getUser().getDisplayName() : "Người dùng");
+                userResponse.setAvatarSender(post.getUser().getAvatarUrl());
+                response.setUser(userResponse);
+            } else {
+                System.out.println("Warning: Post has no user");
+            }
+
+            // Set reaction count
+            try {
+                long reactionCount = postReactionService.getReactionCountByPost(post.getId());
+                response.setReactionCount((int) reactionCount);
+                System.out.println("Set reaction count: " + reactionCount);
+            } catch (Exception e) {
+                System.err.println("Error getting reaction count: " + e.getMessage());
+                response.setReactionCount(0);
+            }
+
+            // Set comment count
+            try {
+                long commentCount = postCommentService.getCommentCountByPost(post.getId());
+                response.setCommentCount((int) commentCount);
+                System.out.println("Set comment count: " + commentCount);
+            } catch (Exception e) {
+                System.err.println("Error getting comment count: " + e.getMessage());
+                response.setCommentCount(0);
+            }
+
+            // Set reactions
+            try {
+                response.setReactions(postReactionService.getReactionsByPost(post.getId()));
+                System.out.println("Set reactions successfully");
+            } catch (Exception e) {
+                System.err.println("Error getting reactions: " + e.getMessage());
+                response.setReactions(new ArrayList<>());
+            }
+
+            // Set comments
+            try {
+                response.setComments(postCommentService.getCommentsByPost(post.getId()));
+                System.out.println("Set comments successfully");
+            } catch (Exception e) {
+                System.err.println("Error getting comments: " + e.getMessage());
+                response.setComments(new ArrayList<>());
+            }
+
+            // Set media URLs
+            try {
+                List<String> mediaUrls = postMediaRepository.findByPostId(post.getId())
+                        .stream()
+                        .map(media -> media.getMediaUrl())
+                        .collect(Collectors.toList());
+                response.setMediaUrls(mediaUrls);
+                System.out.println("Set media URLs: " + mediaUrls.size() + " items");
+            } catch (Exception e) {
+                System.err.println("Error getting media URLs: " + e.getMessage());
+                response.setMediaUrls(new ArrayList<>());
+            }
+
+            System.out.println("Post response conversion completed successfully");
+            return response;
+            
+        } catch (Exception e) {
+            System.err.println("Error in convertToResponse: " + e.getMessage());
+            e.printStackTrace();
+            throw e;
         }
-
-        // Set reaction count
-        response.setReactionCount((int) postReactionService.getReactionCountByPost(post.getId()));
-
-        // Set comment count
-        response.setCommentCount((int) postCommentService.getCommentCountByPost(post.getId()));
-
-        // Set reactions
-        response.setReactions(postReactionService.getReactionsByPost(post.getId()));
-
-        // Set comments
-        response.setComments(postCommentService.getCommentsByPost(post.getId()));
-
-        // Set media URLs
-        List<String> mediaUrls = postMediaRepository.findByPostId(post.getId())
-                .stream()
-                .map(media -> media.getMediaUrl())
-                .collect(Collectors.toList());
-        response.setMediaUrls(mediaUrls);
-
-        return response;
     }
-} 
+
+    // lấy chủ nhân bài viết
+    public User getPostOwner(Long postId) {
+        return postRepository.findPostOwner(postId);
+    }
+}

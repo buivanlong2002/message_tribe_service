@@ -5,8 +5,10 @@ import com.example.message_service.dto.ApiResponse;
 import com.example.message_service.dto.request.ChangePasswordRequest;
 import com.example.message_service.dto.request.RegisterRequest;
 import com.example.message_service.dto.request.UpdateProfileRequest;
+import com.example.message_service.model.PasswordResetOTP;
 import com.example.message_service.model.PasswordResetToken;
 import com.example.message_service.model.User;
+import com.example.message_service.repository.PasswordResetOTPRepository;
 import com.example.message_service.repository.PasswordResetTokenRepository;
 import com.example.message_service.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +39,9 @@ public class UserService {
     private PasswordResetTokenRepository passwordResetTokenRepository;
 
     @Autowired
+    private PasswordResetOTPRepository passwordResetOTPRepository;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Autowired
@@ -47,6 +52,15 @@ public class UserService {
 
     @Value("${user.avatar.upload-dir}")
     private String uploadDir;
+
+    /**
+     * Cập nhật thông tin đăng nhập của người dùng
+     */
+    private void updateLoginInfo(User user) {
+        user.setLastLoginAt(LocalDateTime.now());
+        user.setLoginCount(user.getLoginCount() + 1);
+        userRepository.save(user);
+    }
 
     /**
      * Đăng nhập người dùng và sinh token
@@ -63,6 +77,9 @@ public class UserService {
         if (!passwordEncoder.matches(password, user.getPassword())) {
             return ApiResponse.error("02", "Mật khẩu không đúng");
         }
+
+        // Cập nhật thông tin đăng nhập
+        updateLoginInfo(user);
 
         String token = jwtTokenUtil.generateToken(user);
         long expirationTime = jwtTokenUtil.getExpirationTime(token);
@@ -90,6 +107,7 @@ public class UserService {
         user.setAvatarUrl(request.getAvatarUrl());
         user.setPhoneNumber(request.getPhoneNumber());
         user.setEmail(request.getEmail());
+        user.setBirthday(request.getBirthday());
 
         userRepository.save(user);
 
@@ -141,50 +159,95 @@ public class UserService {
 
         if (userOpt.isEmpty()) {
             // Trả về thành công luôn để tránh dò email
-            return ApiResponse.success("00", "Nếu email tồn tại, hướng dẫn đã được gửi.");
+            return ApiResponse.success("00", "Nếu email tồn tại, mã OTP đã được gửi.");
         }
 
         User user = userOpt.get();
 
-        // Xóa token cũ nếu có
-        passwordResetTokenRepository.deleteByUser(user);
+        // Xóa OTP cũ nếu có
+        passwordResetOTPRepository.deleteByUser(user);
 
-        // Tạo token mới
-        String token = UUID.randomUUID().toString();
-        PasswordResetToken resetToken = new PasswordResetToken();
-        resetToken.setToken(token);
-        resetToken.setUser(user);
-        resetToken.setExpiryDate(LocalDateTime.now().plusMinutes(30));
+        // Tạo OTP mới (6 số)
+        String otp = String.format("%06d", (int) (Math.random() * 1000000));
+        PasswordResetOTP resetOTP = new PasswordResetOTP();
+        resetOTP.setOtp(otp);
+        resetOTP.setUser(user);
+        resetOTP.setExpiryDate(LocalDateTime.now().plusMinutes(5));
 
-        passwordResetTokenRepository.save(resetToken);
+        passwordResetOTPRepository.save(resetOTP);
 
-        // Gửi email
-        emailService.sendResetPasswordEmail(email, token);
+        // Gửi email với OTP
+        emailService.sendOTPEmail(email, otp);
 
-        return ApiResponse.success("00", "Nếu email tồn tại, hướng dẫn đã được gửi.");
+        return ApiResponse.success("00", "Nếu email tồn tại, mã OTP đã được gửi.");
     }
 
     @Transactional
-    public boolean resetPassword(String token, String newPassword) {
-        Optional<PasswordResetToken> tokenOpt = passwordResetTokenRepository.findByToken(token);
+    public ApiResponse<String> verifyOTP(String email, String otp) {
+        Optional<User> userOpt = userRepository.findByEmail(email);
 
-        if (tokenOpt.isEmpty()) return false;
-
-        PasswordResetToken resetToken = tokenOpt.get();
-
-        if (resetToken.getExpiryDate().isBefore(LocalDateTime.now())) {
-            return false; // Token hết hạn
+        if (userOpt.isEmpty()) {
+            return ApiResponse.error("01", "Email không tồn tại");
         }
 
-        User user = resetToken.getUser();
+        User user = userOpt.get();
+        Optional<PasswordResetOTP> otpOpt = passwordResetOTPRepository.findByOtp(otp);
+
+        if (otpOpt.isEmpty()) {
+            return ApiResponse.error("02", "Mã OTP không hợp lệ");
+        }
+
+        PasswordResetOTP resetOTP = otpOpt.get();
+
+        // Kiểm tra OTP có thuộc về user này không
+        if (!resetOTP.getUser().getId().equals(user.getId())) {
+            return ApiResponse.error("03", "Mã OTP không hợp lệ");
+        }
+
+        if (resetOTP.getExpiryDate().isBefore(LocalDateTime.now())) {
+            return ApiResponse.error("04", "Mã OTP đã hết hạn");
+        }
+
+        return ApiResponse.success("00", "Mã OTP hợp lệ");
+    }
+
+    @Transactional
+    public ApiResponse<String> resetPasswordWithOTP(String email, String otp, String newPassword) {
+        Optional<User> userOpt = userRepository.findByEmail(email);
+
+        if (userOpt.isEmpty()) {
+            return ApiResponse.error("01", "Email không tồn tại");
+        }
+
+        User user = userOpt.get();
+        Optional<PasswordResetOTP> otpOpt = passwordResetOTPRepository.findByOtp(otp);
+
+        if (otpOpt.isEmpty()) {
+            return ApiResponse.error("02", "Mã OTP không hợp lệ");
+        }
+
+        PasswordResetOTP resetOTP = otpOpt.get();
+
+        // Kiểm tra OTP có thuộc về user này không
+        if (!resetOTP.getUser().getId().equals(user.getId())) {
+            return ApiResponse.error("03", "Mã OTP không hợp lệ");
+        }
+
+        if (resetOTP.getExpiryDate().isBefore(LocalDateTime.now())) {
+            return ApiResponse.error("04", "Mã OTP đã hết hạn");
+        }
+
+        // Đặt lại mật khẩu
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
 
-        // Xoá token sau khi sử dụng
-        passwordResetTokenRepository.delete(resetToken);
+        // Xoá OTP sau khi sử dụng
+        passwordResetOTPRepository.delete(resetOTP);
 
-        return true;
+        return ApiResponse.success("00", "Mật khẩu đã được đặt lại thành công");
     }
+
+
 
     public List<User> searchByEmail(String email) {
         return userRepository.searchByEmail(email);
@@ -212,11 +275,11 @@ public class UserService {
             if (request.getCurrentPassword() == null || request.getCurrentPassword().trim().isEmpty()) {
                 return ApiResponse.error("02", "Mật khẩu hiện tại không được để trống");
             }
-            
+
             if (request.getNewPassword() == null || request.getNewPassword().trim().isEmpty()) {
                 return ApiResponse.error("03", "Mật khẩu mới không được để trống");
             }
-            
+
             if (request.getNewPassword().length() < 6) {
                 return ApiResponse.error("04", "Mật khẩu mới phải có ít nhất 6 ký tự");
             }
@@ -253,11 +316,20 @@ public class UserService {
             user.setAvatarUrl(request.getAvatarUrl());
         }
 
+        if (request.getBirthday() != null) {
+            user.setBirthday(request.getBirthday());
+        }
+
         return userRepository.save(user);
     }
 
     public List<User> searchByDisplayName(String displayName) {
         return userRepository.findByDisplayNameContainingIgnoreCase(displayName);
+    }
+
+    // lấy người dùng theo id
+    public User getUserById(String userId) {
+        return userRepository.findById(userId).orElse(null);
     }
 
 }

@@ -43,13 +43,7 @@ public class UserController {
     @GetMapping("/profile")
     public ApiResponse<?> getMyProfile() {
         String loginIdentifier = SecurityContextHolder.getContext().getAuthentication().getName();
-        Optional<User> userOptional = userRepository.findByEmail(loginIdentifier); // hoặc findByPhone
-
-        if (userOptional.isEmpty()) {
-            return ApiResponse.error("404", "Không tìm thấy người dùng với định danh từ token: " + loginIdentifier);
-        }
-
-        return ApiResponse.success("00", "Lấy thông tin profile thành công", userOptional.get());
+        return userService.findByEmail(loginIdentifier);
     }
 
     // Cập nhật thông tin người dùng
@@ -87,7 +81,6 @@ public class UserController {
             if (userOptional.isEmpty()) {
                 return ApiResponse.error("01", "Không tìm thấy thông tin người dùng");
             }
-            
             User user = userOptional.get();
             return userService.changePassword(user, request);
         } catch (Exception e) {
@@ -97,9 +90,8 @@ public class UserController {
 
     // Tìm người dùng theo tên hiển thị
     @GetMapping("/search-by-name")
-    public List<User> searchUsersByDisplayName(@RequestParam String name) {
-        return userService.searchByDisplayName(name);
+    public ApiResponse<List<User>> searchUsersByDisplayName(@RequestParam String name) {
+        List<User> users = userService.searchByDisplayName(name);
+        return ApiResponse.success("Tìm kiếm thành công", users);
     }
-
-
 }

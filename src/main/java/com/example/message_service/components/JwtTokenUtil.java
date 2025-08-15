@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
-
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Date;
@@ -35,8 +34,9 @@ public class JwtTokenUtil {
     public String generateToken(User user) throws Exception {
         Map<String, Object> claims = new HashMap<>();
         claims.put("id", user.getId());
-        claims.put("name", user.getUsername());
+        claims.put("name", user.getDisplayName());
         claims.put("email", user.getEmail()); // Optional: vẫn có thể lưu trong claims
+        claims.put("role", user.getRole().name());
 
         PrivateKey privateKey = keyProvider.getPrivateKey();
 
@@ -101,7 +101,7 @@ public class JwtTokenUtil {
     }
 
     /**
-     * Kiểm tra token hợp lệ (username trùng và chưa hết hạn)
+     * Kiểm tra username trong token hợp lệ có khớp với userdetail (username trùng và chưa hết hạn)
      */
     public boolean validateToken(String token, UserDetails userDetails) {
         final String email = extractUsername(token);

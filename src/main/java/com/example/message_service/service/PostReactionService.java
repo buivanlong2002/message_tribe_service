@@ -43,7 +43,8 @@ public class PostReactionService {
 
             // Kiểm tra xem user đã reaction chưa
             if (postReactionRepository.existsByPostIdAndUserId(postId, userId)) {
-                return ApiResponse.error("01", "User đã reaction post này rồi");
+                // Nếu đã có reaction, cập nhật reaction type
+                return updateReaction(postId, userId, request);
             }
 
             PostReaction reaction = new PostReaction();
@@ -147,7 +148,8 @@ public class PostReactionService {
         if (reaction.getUser() != null) {
             SenderResponse userResponse = new SenderResponse();
             userResponse.setSenderId(reaction.getUser().getId());
-            userResponse.setNameSender(reaction.getUser().getUsername());
+            userResponse.setNameSender(reaction.getUser().getDisplayName() != null ? reaction.getUser().getDisplayName() : "Người dùng");
+            userResponse.setAvatarSender(reaction.getUser().getAvatarUrl());
             response.setUser(userResponse);
         }
 

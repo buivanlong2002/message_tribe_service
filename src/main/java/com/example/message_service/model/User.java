@@ -6,7 +6,9 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import com.example.message_service.model.UserRole;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
@@ -42,10 +44,25 @@ public class User implements UserDetails {
     @Column(unique = true)
     private String phoneNumber;
 
+    private String birthday;
+
     @Column(unique = true, nullable = false)
     private String email;
 
     private String status = "active";
+
+    @Enumerated(EnumType.STRING)
+    @Column(columnDefinition = "varchar(20) default 'ROLE_USER'")
+    private UserRole role = UserRole.ROLE_USER;
+
+    @Column(columnDefinition = "boolean default false")
+    private Boolean isBlocked = false;
+
+    @Column
+    private LocalDateTime lastLoginAt;
+
+    @Column(columnDefinition = "integer default 0")
+    private Integer loginCount = 0;
 
     @CreationTimestamp
     private LocalDateTime createdAt;
@@ -62,7 +79,7 @@ public class User implements UserDetails {
     @Override
     @JsonIgnore
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of();
+        return List.of(new SimpleGrantedAuthority(this.role.name()));
     }
 
     @Override
@@ -74,7 +91,7 @@ public class User implements UserDetails {
     @Override
     @JsonIgnore
     public boolean isAccountNonLocked() {
-        return true;
+        return !this.isBlocked;
     }
 
     @Override
@@ -86,6 +103,6 @@ public class User implements UserDetails {
     @Override
     @JsonIgnore
     public boolean isEnabled() {
-        return this.status.equalsIgnoreCase("active");
+        return this.status.equalsIgnoreCase("active") && !this.isBlocked;
     }
 }

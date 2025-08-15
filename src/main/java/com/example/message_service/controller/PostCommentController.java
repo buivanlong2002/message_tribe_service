@@ -4,7 +4,13 @@ import com.example.message_service.dto.ApiResponse;
 import com.example.message_service.dto.request.CreatePostCommentRequest;
 import com.example.message_service.dto.request.UpdatePostCommentRequest;
 import com.example.message_service.dto.response.PostCommentResponse;
+import com.example.message_service.model.NotificationType;
+import com.example.message_service.model.User;
+import com.example.message_service.service.NotificationService;
 import com.example.message_service.service.PostCommentService;
+import com.example.message_service.service.PostService;
+import com.example.message_service.service.UserService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,10 +21,17 @@ import java.util.List;
 public class PostCommentController {
 
     private final PostCommentService postCommentService;
+    private final UserService userService;
+    private final PostService postService;
+    private final NotificationService notificationService;
 
     @Autowired
-    public PostCommentController(PostCommentService postCommentService) {
+    public PostCommentController(PostCommentService postCommentService, UserService userService,
+            PostService postService, NotificationService notificationService) {
         this.postCommentService = postCommentService;
+        this.userService = userService;
+        this.postService = postService;
+        this.notificationService = notificationService;
     }
 
     // Tạo comment mới
@@ -26,8 +39,8 @@ public class PostCommentController {
     public ApiResponse<PostCommentResponse> createComment(
             @RequestParam Long postId,
             @RequestParam String userId,
-            @RequestBody CreatePostCommentRequest request
-    ) {
+            @RequestBody CreatePostCommentRequest request) {
+
         return postCommentService.createComment(postId, userId, request);
     }
 
@@ -42,8 +55,7 @@ public class PostCommentController {
     public ApiResponse<List<PostCommentResponse>> getCommentsByPost(
             @PathVariable Long postId,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size
-    ) {
+            @RequestParam(defaultValue = "20") int size) {
         return postCommentService.getCommentsByPostWithPagination(postId, page, size);
     }
 
@@ -59,8 +71,7 @@ public class PostCommentController {
     public ApiResponse<List<PostCommentResponse>> getCommentsByUser(
             @PathVariable String userId,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size
-    ) {
+            @RequestParam(defaultValue = "20") int size) {
         return postCommentService.getCommentsByUser(userId, page, size);
     }
 
@@ -69,8 +80,7 @@ public class PostCommentController {
     public ApiResponse<PostCommentResponse> updateComment(
             @PathVariable Long commentId,
             @RequestParam String userId,
-            @RequestBody UpdatePostCommentRequest request
-    ) {
+            @RequestBody UpdatePostCommentRequest request) {
         return postCommentService.updateComment(commentId, userId, request);
     }
 
@@ -78,8 +88,7 @@ public class PostCommentController {
     @DeleteMapping("/{commentId}")
     public ApiResponse<String> deleteComment(
             @PathVariable Long commentId,
-            @RequestParam String userId
-    ) {
+            @RequestParam String userId) {
         return postCommentService.deleteComment(commentId, userId);
     }
 
@@ -88,8 +97,7 @@ public class PostCommentController {
     public ApiResponse<List<PostCommentResponse>> searchComments(
             @RequestParam String keyword,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size
-    ) {
+            @RequestParam(defaultValue = "20") int size) {
         return postCommentService.searchComments(keyword, page, size);
     }
-} 
+}

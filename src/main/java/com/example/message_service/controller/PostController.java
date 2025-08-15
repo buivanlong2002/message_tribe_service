@@ -84,10 +84,55 @@ public class PostController {
     public ApiResponse<PostResponse> updatePost(
             @PathVariable Long postId,
             @RequestParam String userId,
-            @RequestPart("metadata") @Valid @NotNull UpdatePostRequest request,
+            @RequestParam("metadata") String metadata,
             @RequestPart(value = "files", required = false) MultipartFile[] files
-    ) {
-        return postService.updatePost(postId, userId, request, files);
+    ) throws JsonProcessingException {
+        try {
+            // Log để debug
+            System.out.println("Update post - postId: " + postId + ", userId: " + userId);
+            System.out.println("Metadata: " + metadata);
+            System.out.println("Files count: " + (files != null ? files.length : 0));
+            
+            // Validate input
+            if (metadata == null || metadata.trim().isEmpty()) {
+                return ApiResponse.error("01", "Metadata không được để trống");
+            }
+            
+            // Convert String JSON -> UpdatePostRequest object
+            UpdatePostRequest request = objectMapper.readValue(metadata, UpdatePostRequest.class);
+            
+            // Log request object
+            System.out.println("Parsed request - content: " + request.getContent() + 
+                             ", visibility: " + request.getVisibility());
+            
+            // Validate files
+            if (files != null) {
+                for (int i = 0; i < files.length; i++) {
+                    MultipartFile file = files[i];
+                    if (file != null) {
+                        System.out.println("File " + i + ": " + file.getOriginalFilename() + 
+                                         ", size: " + file.getSize() + 
+                                         ", content type: " + file.getContentType());
+                        
+                        if (file.isEmpty()) {
+                            System.out.println("Warning: File " + i + " is empty");
+                        }
+                    } else {
+                        System.out.println("Warning: File " + i + " is null");
+                    }
+                }
+            }
+            
+            return postService.updatePost(postId, userId, request, files);
+        } catch (JsonProcessingException e) {
+            System.err.println("JSON parsing error: " + e.getMessage());
+            e.printStackTrace();
+            return ApiResponse.error("01", "Lỗi khi parse JSON metadata: " + e.getMessage());
+        } catch (Exception e) {
+            System.err.println("Error in updatePost: " + e.getMessage());
+            e.printStackTrace();
+            return ApiResponse.error("01", "Lỗi khi cập nhật post: " + e.getMessage());
+        }
     }
 
     // Cập nhật post đơn giản (không có file)

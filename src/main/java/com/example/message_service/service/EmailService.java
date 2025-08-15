@@ -11,15 +11,12 @@ public class EmailService {
 
     private final JavaMailSender mailSender;
 
-    public void sendResetPasswordEmail(String to, String token) {
-        // Link đến trang reset-password.html trên frontend
-        String resetLink = "https://tomotalk.netlify.app/reset-password.html?token=" + token;
 
-        String subject = "TomoTalk - Đặt lại mật khẩu";
-        String text = "Bạn đã yêu cầu đặt lại mật khẩu cho tài khoản TomoTalk.\n\n"
-                + "Nhấn vào liên kết sau để thiết lập mật khẩu mới:\n"
-                + resetLink + "\n\n"
-                + "Liên kết này sẽ hết hạn sau 30 phút.\n\n"
+    public void sendOTPEmail(String to, String otp) {
+        String subject = "Tribe - Mã OTP đặt lại mật khẩu";
+        String text = "Bạn đã yêu cầu đặt lại mật khẩu cho tài khoản Tribe.\n\n"
+                + "Mã OTP của bạn là: " + otp + "\n\n"
+                + "Mã này sẽ hết hạn sau 5 phút.\n\n"
                 + "Nếu bạn không yêu cầu, vui lòng bỏ qua email này.";
 
         SimpleMailMessage message = new SimpleMailMessage();

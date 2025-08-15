@@ -3,7 +3,14 @@ package com.example.message_service.controller;
 import com.example.message_service.dto.ApiResponse;
 import com.example.message_service.dto.request.CreatePostReactionRequest;
 import com.example.message_service.dto.response.PostReactionResponse;
+import com.example.message_service.model.NotificationType;
+import com.example.message_service.model.User;
+import com.example.message_service.service.NotificationService;
 import com.example.message_service.service.PostReactionService;
+import com.example.message_service.service.PostService;
+import com.example.message_service.service.UserService;
+
+import org.aspectj.weaver.ast.Not;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,10 +21,17 @@ import java.util.List;
 public class PostReactionController {
 
     private final PostReactionService postReactionService;
+    private final NotificationService notificationService;
+    private final PostService postService;
+    private final UserService userService;
 
     @Autowired
-    public PostReactionController(PostReactionService postReactionService) {
+    public PostReactionController(PostReactionService postReactionService, NotificationService notificationService,
+            PostService postService, UserService userService) {
         this.postReactionService = postReactionService;
+        this.notificationService = notificationService;
+        this.postService = postService;
+        this.userService = userService;
     }
 
     // Tạo reaction mới
@@ -25,9 +39,66 @@ public class PostReactionController {
     public ApiResponse<PostReactionResponse> createReaction(
             @RequestParam Long postId,
             @RequestParam String userId,
-            @RequestBody CreatePostReactionRequest request
-    ) {
+            @RequestBody CreatePostReactionRequest request) {
+
+        // lấy tên người reaction
+        User reactor = userService.getUserById(userId);
+
+        // lấy chủ nhân bài viết
+        User postOwner = postService.getPostOwner(postId);
+
+        // thêm thông báo
+        notificationService.createNotification(NotificationType.REACTION_POST, postOwner,
+                reactor.getDisplayName() + " đã phản ứng với bài viết");
         return postReactionService.createReaction(postId, userId, request);
+    }
+
+    // Toggle reaction (tạo nếu chưa có, xóa nếu đã có)
+    @PostMapping("/toggle")
+    public ApiResponse<Object> toggleReaction(
+            @RequestParam Long postId,
+            @RequestParam String userId,
+            @RequestBody CreatePostReactionRequest request) {
+
+        try {
+            // Kiểm tra xem user đã reaction chưa
+            boolean hasReacted = postReactionService.hasUserReacted(postId, userId);
+            
+            if (hasReacted) {
+                // Nếu đã reaction thì xóa
+                ApiResponse<String> deleteResult = postReactionService.deleteReaction(postId, userId);
+                if (deleteResult.getStatus().isSuccess()) {
+                    return ApiResponse.success("00", "Đã bỏ reaction", null);
+                } else {
+                    return ApiResponse.error(deleteResult.getStatus().getCode(), 
+                                           deleteResult.getStatus().getDisplayMessage());
+                }
+            } else {
+                // Nếu chưa reaction thì tạo mới
+                // lấy tên người reaction
+                User reactor = userService.getUserById(userId);
+                if (reactor == null) {
+                    return ApiResponse.error("01", "Không tìm thấy người dùng");
+                }
+
+                // lấy chủ nhân bài viết
+                User postOwner = postService.getPostOwner(postId);
+                if (postOwner == null) {
+                    return ApiResponse.error("01", "Không tìm thấy bài viết");
+                }
+
+                
+                ApiResponse<PostReactionResponse> createResult = postReactionService.createReaction(postId, userId, request);
+                if (createResult.getStatus().isSuccess()) {
+                    return ApiResponse.success("00", "Đã tạo reaction", createResult.getData());
+                } else {
+                    return ApiResponse.error(createResult.getStatus().getCode(), 
+                                           createResult.getStatus().getDisplayMessage());
+                }
+            }
+        } catch (Exception e) {
+            return ApiResponse.error("01", "Lỗi khi toggle reaction: " + e.getMessage());
+        }
     }
 
     // Cập nhật reaction
@@ -35,8 +106,7 @@ public class PostReactionController {
     public ApiResponse<PostReactionResponse> updateReaction(
             @RequestParam Long postId,
             @RequestParam String userId,
-            @RequestBody CreatePostReactionRequest request
-    ) {
+            @RequestBody CreatePostReactionRequest request) {
         return postReactionService.updateReaction(postId, userId, request);
     }
 
@@ -44,8 +114,7 @@ public class PostReactionController {
     @DeleteMapping("/delete")
     public ApiResponse<String> deleteReaction(
             @RequestParam Long postId,
-            @RequestParam String userId
-    ) {
+            @RequestParam String userId) {
         return postReactionService.deleteReaction(postId, userId);
     }
 
@@ -60,8 +129,7 @@ public class PostReactionController {
     @GetMapping("/user")
     public ApiResponse<PostReactionResponse> getReactionByUser(
             @RequestParam Long postId,
-            @RequestParam String userId
-    ) {
+            @RequestParam String userId) {
         return postReactionService.getReactionByUser(postId, userId);
     }
 
@@ -69,8 +137,7 @@ public class PostReactionController {
     @GetMapping("/check")
     public ApiResponse<Boolean> hasUserReacted(
             @RequestParam Long postId,
-            @RequestParam String userId
-    ) {
+            @RequestParam String userId) {
         boolean hasReacted = postReactionService.hasUserReacted(postId, userId);
         return ApiResponse.success("00", "Kiểm tra reaction thành công", hasReacted);
     }
@@ -81,4 +148,4 @@ public class PostReactionController {
         long count = postReactionService.getReactionCountByPost(postId);
         return ApiResponse.success("00", "Đếm reactions thành công", count);
     }
-} 
+}

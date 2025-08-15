@@ -12,7 +12,6 @@ import lombok.*;
 @NoArgsConstructor
 public class RegisterRequest {
 
-
     @NotBlank(message = "Password không được để trống")
     @Size(min = 6, max = 100, message = "Password phải từ 6 đến 100 ký tự")
     private String password;
@@ -27,4 +26,7 @@ public class RegisterRequest {
 
     @Email(message = "Email không hợp lệ")
     private String email;
+
+    @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$", message = "Birthday phải đúng định dạng yyyy-MM-dd")
+    private String birthday;
 }

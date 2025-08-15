@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
@@ -21,6 +22,7 @@ import java.util.List;
 public class WebSecurityConfig {
 
     private final JwtTokenFilter jwtTokenFilter;
+    private final AuthenticationProvider authenticationProvider;
 
     @Value("${api.prefix}")
     private String apiPrefix;
@@ -31,6 +33,7 @@ public class WebSecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .authenticationProvider(authenticationProvider)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/",                          // Trang chủ
@@ -52,6 +55,7 @@ public class WebSecurityConfig {
                                 String.format("%s/auth/reset-password", apiPrefix),
                                 String.format("%s/index", apiPrefix)
                         ).permitAll()
+                        .requestMatchers(String.format("%s/admin/**", apiPrefix)).hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class);
@@ -71,6 +75,5 @@ public class WebSecurityConfig {
         source.registerCorsConfiguration("/**", config);
         return source;
     }
-
 
 }

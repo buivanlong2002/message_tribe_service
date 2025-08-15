@@ -198,6 +198,17 @@ public class PostCommentService {
         return postCommentRepository.countByPostId(postId);
     }
 
+    // Lấy chủ nhân của comment
+    public User getCommentOwner(Long commentId) {
+        try {
+            PostComment comment = postCommentRepository.findById(commentId)
+                    .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy comment"));
+            return comment.getUser();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     // Đếm số comments của user
     public long getCommentCountByUser(String userId) {
         return postCommentRepository.countByUserId(userId);
@@ -219,7 +230,8 @@ public class PostCommentService {
         if (comment.getUser() != null) {
             SenderResponse userResponse = new SenderResponse();
             userResponse.setSenderId(comment.getUser().getId());
-            userResponse.setNameSender(comment.getUser().getUsername());
+            userResponse.setNameSender(comment.getUser().getDisplayName() != null ? comment.getUser().getDisplayName() : "Người dùng");
+            userResponse.setAvatarSender(comment.getUser().getAvatarUrl());
             response.setUser(userResponse);
         }
 
