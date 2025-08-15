@@ -198,6 +198,17 @@ public class PostCommentService {
         return postCommentRepository.countByPostId(postId);
     }
 
+    // Lấy chủ nhân của comment
+    public User getCommentOwner(Long commentId) {
+        try {
+            PostComment comment = postCommentRepository.findById(commentId)
+                    .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy comment"));
+            return comment.getUser();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     // Đếm số comments của user
     public long getCommentCountByUser(String userId) {
         return postCommentRepository.countByUserId(userId);

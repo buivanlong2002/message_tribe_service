@@ -53,6 +53,54 @@ public class PostReactionController {
         return postReactionService.createReaction(postId, userId, request);
     }
 
+    // Toggle reaction (tạo nếu chưa có, xóa nếu đã có)
+    @PostMapping("/toggle")
+    public ApiResponse<Object> toggleReaction(
+            @RequestParam Long postId,
+            @RequestParam String userId,
+            @RequestBody CreatePostReactionRequest request) {
+
+        try {
+            // Kiểm tra xem user đã reaction chưa
+            boolean hasReacted = postReactionService.hasUserReacted(postId, userId);
+            
+            if (hasReacted) {
+                // Nếu đã reaction thì xóa
+                ApiResponse<String> deleteResult = postReactionService.deleteReaction(postId, userId);
+                if (deleteResult.getStatus().isSuccess()) {
+                    return ApiResponse.success("00", "Đã bỏ reaction", null);
+                } else {
+                    return ApiResponse.error(deleteResult.getStatus().getCode(), 
+                                           deleteResult.getStatus().getDisplayMessage());
+                }
+            } else {
+                // Nếu chưa reaction thì tạo mới
+                // lấy tên người reaction
+                User reactor = userService.getUserById(userId);
+                if (reactor == null) {
+                    return ApiResponse.error("01", "Không tìm thấy người dùng");
+                }
+
+                // lấy chủ nhân bài viết
+                User postOwner = postService.getPostOwner(postId);
+                if (postOwner == null) {
+                    return ApiResponse.error("01", "Không tìm thấy bài viết");
+                }
+
+                
+                ApiResponse<PostReactionResponse> createResult = postReactionService.createReaction(postId, userId, request);
+                if (createResult.getStatus().isSuccess()) {
+                    return ApiResponse.success("00", "Đã tạo reaction", createResult.getData());
+                } else {
+                    return ApiResponse.error(createResult.getStatus().getCode(), 
+                                           createResult.getStatus().getDisplayMessage());
+                }
+            }
+        } catch (Exception e) {
+            return ApiResponse.error("01", "Lỗi khi toggle reaction: " + e.getMessage());
+        }
+    }
+
     // Cập nhật reaction
     @PutMapping("/update")
     public ApiResponse<PostReactionResponse> updateReaction(

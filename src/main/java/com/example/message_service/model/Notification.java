@@ -18,7 +18,7 @@ public class Notification {
 
     // Ai nhận thông báo
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "receiver_id", nullable = false)
+    @JoinColumn(name = "user_id", nullable = false)
     private User receiver;
 
     // Loại thông báo (dùng String cho linh hoạt)

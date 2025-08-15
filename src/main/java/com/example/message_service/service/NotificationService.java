@@ -1,5 +1,6 @@
 package com.example.message_service.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -23,6 +24,8 @@ public class NotificationService {
         notification.setType(type);
         notification.setReceiver(receiver);
         notification.setContent(content);
+        notification.setCreatedAt(LocalDateTime.now());
+        notification.setRead(false);
         return notificationRepository.save(notification);
     }
 

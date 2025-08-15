@@ -40,16 +40,6 @@ public class PostCommentController {
             @RequestParam Long postId,
             @RequestParam String userId,
             @RequestBody CreatePostCommentRequest request) {
-        // thêm thông báo comment
-        // lấy tên người comment
-        User commenter = userService.getUserById(userId);
-
-        // lấy chủ nhân bài viết
-        User postOwner = postService.getPostOwner(postId);
-
-        // thêm thông báo
-        notificationService.createNotification(NotificationType.COMMENT_POST, postOwner,
-                commenter.getDisplayName() + " đã bình luận về bài viết");
 
         return postCommentService.createComment(postId, userId, request);
     }
