@@ -3,12 +3,14 @@ package com.example.message_service.model;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
@@ -35,4 +37,14 @@ public class PostReaction {
     @CreationTimestamp
     private LocalDateTime createdAt;
 
+    @Override
+    public String toString() {
+        return "PostReaction{" +
+                "id=" + id +
+                ", postId=" + (post != null ? post.getId() : null) +
+                ", userId=" + (user != null ? user.getId() : null) +
+                ", reactionType=" + reactionType +
+                ", createdAt=" + createdAt +
+                '}';
+    }
 }

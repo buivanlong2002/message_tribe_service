@@ -83,57 +83,50 @@ public class PostController {
     @PutMapping(value = "/{postId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<PostResponse> updatePost(
             @PathVariable Long postId,
-            @RequestParam String userId,
             @RequestParam("metadata") String metadata,
             @RequestPart(value = "files", required = false) MultipartFile[] files
-    ) throws JsonProcessingException {
+    ) {
         try {
-            // Log để debug
-            System.out.println("Update post - postId: " + postId + ", userId: " + userId);
-            System.out.println("Metadata: " + metadata);
-            System.out.println("Files count: " + (files != null ? files.length : 0));
-            
-            // Validate input
             if (metadata == null || metadata.trim().isEmpty()) {
                 return ApiResponse.error("01", "Metadata không được để trống");
             }
-            
-            // Convert String JSON -> UpdatePostRequest object
+
+            // Parse JSON metadata sang DTO
             UpdatePostRequest request = objectMapper.readValue(metadata, UpdatePostRequest.class);
-            
-            // Log request object
-            System.out.println("Parsed request - content: " + request.getContent() + 
-                             ", visibility: " + request.getVisibility());
-            
-            // Validate files
+
+            if (request.getUserId() == null || request.getUserId().trim().isEmpty()) {
+                return ApiResponse.error("01", "UserId không được để trống");
+            }
+
+            // Debug log
+            System.out.println("[UpdatePost] postId=" + postId +
+                    ", userId=" + request.getUserId() +
+                    ", content=" + request.getContent() +
+                    ", visibility=" + request.getVisibility());
+
             if (files != null) {
-                for (int i = 0; i < files.length; i++) {
-                    MultipartFile file = files[i];
+                for (MultipartFile file : files) {
                     if (file != null) {
-                        System.out.println("File " + i + ": " + file.getOriginalFilename() + 
-                                         ", size: " + file.getSize() + 
-                                         ", content type: " + file.getContentType());
-                        
-                        if (file.isEmpty()) {
-                            System.out.println("Warning: File " + i + " is empty");
-                        }
-                    } else {
-                        System.out.println("Warning: File " + i + " is null");
+                        System.out.println("File: " + file.getOriginalFilename() +
+                                ", size=" + file.getSize() +
+                                ", type=" + file.getContentType());
                     }
                 }
             }
-            
-            return postService.updatePost(postId, userId, request, files);
+
+            // Gọi service xử lý
+            return postService.updatePost(postId, request.getUserId(), request, files);
+
         } catch (JsonProcessingException e) {
-            System.err.println("JSON parsing error: " + e.getMessage());
             e.printStackTrace();
-            return ApiResponse.error("01", "Lỗi khi parse JSON metadata: " + e.getMessage());
+            return ApiResponse.error("01", "Lỗi parse JSON metadata: " + e.getOriginalMessage());
         } catch (Exception e) {
-            System.err.println("Error in updatePost: " + e.getMessage());
             e.printStackTrace();
-            return ApiResponse.error("01", "Lỗi khi cập nhật post: " + e.getMessage());
+            return ApiResponse.error("99", "Lỗi hệ thống: " + e.getMessage());
         }
     }
+
+
 
     // Cập nhật post đơn giản (không có file)
     @PutMapping(value = "/{postId}/simple", consumes = MediaType.APPLICATION_JSON_VALUE)
