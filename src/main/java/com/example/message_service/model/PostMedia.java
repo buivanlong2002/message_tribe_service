@@ -2,12 +2,14 @@ package com.example.message_service.model;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "post_media")
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 public class PostMedia {
@@ -28,6 +30,16 @@ public class PostMedia {
         this.post = savedPost;
         this.mediaUrl = url;
         this.mediaType = contentType;
+    }
+
+    @Override
+    public String toString() {
+        return "PostMedia{" +
+                "id=" + id +
+                ", postId=" + (post != null ? post.getId() : null) +
+                ", mediaUrl='" + mediaUrl + '\'' +
+                ", mediaType='" + mediaType + '\'' +
+                '}';
     }
 }
 

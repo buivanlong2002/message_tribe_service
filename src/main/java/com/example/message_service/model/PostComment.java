@@ -4,15 +4,17 @@ package com.example.message_service.model;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
@@ -46,4 +48,17 @@ public class PostComment {
 
     private LocalDateTime deletedAt;
 
+    @Override
+    public String toString() {
+        return "PostComment{" +
+                "id=" + id +
+                ", postId=" + (post != null ? post.getId() : null) +
+                ", userId=" + (user != null ? user.getId() : null) +
+                ", content='" + content + '\'' +
+                ", parentCommentId=" + (parentComment != null ? parentComment.getId() : null) +
+                ", repliesCount=" + (replies != null ? replies.size() : 0) +
+                ", createdAt=" + createdAt +
+                ", deletedAt=" + deletedAt +
+                '}';
+    }
 }
