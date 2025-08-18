@@ -27,9 +27,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
 public class NeoPostService {
+
+    private static final Logger log = LoggerFactory.getLogger(NeoPostService.class);
 
     private final UserService userService;
     private final NeoPostRepository neoPostRepository;
@@ -116,28 +120,49 @@ public class NeoPostService {
 
     public ApiResponse<NeoPostResponse> createPost(CreatePostRequest request, MultipartFile[] mediaFiles)
             throws Exception {
-        UserResponse currentUser = getCurrentUser();
+        try {
+            // Validate request
+            if (request == null) {
+                throw new IllegalArgumentException("Request không được null");
+            }
+            if (request.getContent() == null || request.getContent().trim().isEmpty()) {
+                throw new IllegalArgumentException("Nội dung bài viết không được để trống");
+            }
 
-        NeoPost post = new NeoPost();
-        post.setContent(request.getContent());
-        post.setVisibility(request.getVisibility());
-        post.setCreatedAt(LocalDateTime.now());
-        post.setUpdatedAt(LocalDateTime.now());
+            UserResponse currentUser = getCurrentUser();
+            if (currentUser == null) {
+                throw new IllegalStateException("Không thể xác định người dùng hiện tại");
+            }
 
-        // Xử lý media files nếu có
-        if (mediaFiles != null && mediaFiles.length > 0) {
-            List<String> mediaUrls = processMediaFiles(mediaFiles);
-            post.setUrlMedia(mediaUrls);
+            NeoPost post = new NeoPost();
+            post.setContent(request.getContent().trim());
+            post.setVisibility(request.getVisibility() != null ? request.getVisibility() : NeoPostVisibility.PUBLIC);
+            post.setCreatedAt(LocalDateTime.now());
+            post.setUpdatedAt(LocalDateTime.now());
+
+            // Xử lý media files nếu có
+            if (mediaFiles != null && mediaFiles.length > 0) {
+                List<String> mediaUrls = processMediaFiles(mediaFiles);
+                post.setUrlMedia(mediaUrls);
+            } else {
+                post.setUrlMedia(new ArrayList<>());
+            }
+
+            // Set user from currentUser
+            User user = userService.getUserById(currentUser.getId());
+            if (user == null) {
+                throw new IllegalStateException("Không tìm thấy thông tin người dùng");
+            }
+            post.setUser(user);
+
+            NeoPost savedPost = neoPostRepository.save(post);
+            NeoPostResponse response = convertToNeoPostResponse(savedPost);
+
+            return ApiResponse.success("00", "Tạo bài viết thành công", response);
+        } catch (Exception e) {
+            log.error("Lỗi khi tạo bài viết: {}", e.getMessage(), e);
+            throw e; // Re-throw để controller xử lý
         }
-
-        // Set user from currentUser
-        User user = userService.getUserById(currentUser.getId());
-        post.setUser(user);
-
-        NeoPost savedPost = neoPostRepository.save(post);
-        NeoPostResponse response = convertToNeoPostResponse(savedPost);
-
-        return ApiResponse.success("00", "Tạo bài viết thành công", response);
     }
 
     public ApiResponse<NeoPostResponse> updatePost(String postId, UpdatePostRequest request) throws Exception {
@@ -426,13 +451,28 @@ public class NeoPostService {
 
         try {
             Path uploadPath = Paths.get("uploads", "neo-posts");
-            Files.createDirectories(uploadPath);
+            if (!Files.exists(uploadPath)) {
+                Files.createDirectories(uploadPath);
+            }
 
             for (MultipartFile file : mediaFiles) {
-                if (file == null || file.isEmpty())
+                if (file == null || file.isEmpty()) {
+                    log.warn("Bỏ qua file null hoặc rỗng");
                     continue;
+                }
 
                 String originalFilename = file.getOriginalFilename();
+                if (originalFilename == null || originalFilename.trim().isEmpty()) {
+                    log.warn("Bỏ qua file không có tên");
+                    continue;
+                }
+
+                // Validate file size (giới hạn 10MB)
+                if (file.getSize() > 10 * 1024 * 1024) {
+                    log.warn("File {} quá lớn, bỏ qua", originalFilename);
+                    continue;
+                }
+
                 String extension = getFileExtension(originalFilename);
                 String uniqueName = UUID.randomUUID().toString() + extension;
 
@@ -441,9 +481,14 @@ public class NeoPostService {
 
                 String publicUrl = "/uploads/neo-posts/" + uniqueName;
                 mediaUrls.add(publicUrl);
+                log.info("Đã lưu file: {} -> {}", originalFilename, publicUrl);
             }
         } catch (IOException e) {
+            log.error("Lỗi khi lưu media files: {}", e.getMessage(), e);
             throw new RuntimeException("Lỗi khi lưu media của bài viết: " + e.getMessage(), e);
+        } catch (Exception e) {
+            log.error("Lỗi không xác định khi xử lý media files: {}", e.getMessage(), e);
+            throw new RuntimeException("Lỗi không xác định khi xử lý media files: " + e.getMessage(), e);
         }
 
         return mediaUrls;

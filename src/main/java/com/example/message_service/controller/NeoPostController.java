@@ -12,6 +12,8 @@ import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.http.HttpStatus;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.List;
 
@@ -31,14 +33,41 @@ public class NeoPostController {
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse<NeoPostResponse>> createPost(
-            @RequestPart("request") CreatePostRequest request,
+            @RequestParam("request") String requestJson,
             @RequestPart(value = "mediaFiles", required = false) MultipartFile[] mediaFiles) {
         try {
+            log.info("Nhận request JSON: {}", requestJson);
+
+            // Parse JSON string thành CreatePostRequest
+            ObjectMapper objectMapper = new ObjectMapper();
+            CreatePostRequest request;
+            try {
+                request = objectMapper.readValue(requestJson, CreatePostRequest.class);
+            } catch (Exception e) {
+                log.error("Lỗi khi parse JSON: {}", e.getMessage());
+                return ResponseEntity.badRequest()
+                        .body(ApiResponse.error("01", "JSON không hợp lệ: " + e.getMessage()));
+            }
+
+            log.info("Đã parse request: content={}, visibility={}, mediaFiles={}",
+                    request.getContent(), request.getVisibility(),
+                    mediaFiles != null ? mediaFiles.length : 0);
+
+            // Validate request
+            if (request.getContent() == null || request.getContent().trim().isEmpty()) {
+                log.error("Content bị null hoặc rỗng");
+                return ResponseEntity.badRequest()
+                        .body(ApiResponse.error("01", "Nội dung bài viết không được để trống"));
+            }
+
             ApiResponse<NeoPostResponse> response = neoPostService.createPost(request, mediaFiles);
+            log.info("Tạo bài viết thành công với ID: {}",
+                    response.getData() != null ? response.getData().getId() : "null");
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            log.error("Lỗi khi tạo bài viết: {}", e.getMessage());
-            return ResponseEntity.badRequest().body(ApiResponse.error("01", "Lỗi khi tạo bài viết: " + e.getMessage()));
+            log.error("Lỗi khi tạo bài viết: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("99", "Lỗi khi tạo bài viết: " + e.getMessage()));
         }
     }
 

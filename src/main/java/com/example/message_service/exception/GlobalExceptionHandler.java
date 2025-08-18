@@ -34,25 +34,39 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error("02", "Dữ liệu không hợp lệ"));
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiResponse<String>> handleIllegalArgumentException(IllegalArgumentException ex) {
+        logger.error("Lỗi tham số không hợp lệ: {}", ex.getMessage(), ex);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error("01", ex.getMessage()));
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ApiResponse<String>> handleIllegalStateException(IllegalStateException ex) {
+        logger.error("Lỗi trạng thái không hợp lệ: {}", ex.getMessage(), ex);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error("01", ex.getMessage()));
+    }
+
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ApiResponse<String>> handleRuntimeException(RuntimeException ex) {
         logger.error("Lỗi hệ thống: {}", ex.getMessage(), ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponse.error("99", "Đã xảy ra lỗi nội bộ"));
+                .body(ApiResponse.error("99", "Đã xảy ra lỗi nội bộ: " + ex.getMessage()));
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<String>> handleException(Exception ex) {
         logger.error("Lỗi không xác định: {}", ex.getMessage(), ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponse.error("99", "Đã xảy ra lỗi không xác định"));
+                .body(ApiResponse.error("99", "Đã xảy ra lỗi không xác định: " + ex.getMessage()));
     }
 
     @ExceptionHandler(IOException.class)
     public ResponseEntity<ApiResponse<String>> handleIOException(IOException e) {
         logger.error("Lỗi IO: {}", e.getMessage(), e);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponse.error("99", "Đã xảy ra lỗi không xác định"));
+                .body(ApiResponse.error("99", "Lỗi xử lý file: " + e.getMessage()));
     }
 
 }
