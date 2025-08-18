@@ -3,6 +3,7 @@ package com.example.message_service.controller;
 import com.example.message_service.dto.ApiResponse;
 import com.example.message_service.dto.request.ChangePasswordRequest;
 import com.example.message_service.dto.request.UpdateProfileRequest;
+import com.example.message_service.dto.response.UserResponse;
 import com.example.message_service.model.User;
 import com.example.message_service.repository.UserRepository;
 import com.example.message_service.service.UserService;
@@ -56,7 +57,7 @@ public class UserController {
 
     // Lấy người dùng theo ID
     @GetMapping("/{userId}")
-    public ApiResponse<User> getUserById(@PathVariable String userId) {
+    public ApiResponse<UserResponse> getUserById(@PathVariable String userId) {
         return userService.getByUserId(userId);
     }
 

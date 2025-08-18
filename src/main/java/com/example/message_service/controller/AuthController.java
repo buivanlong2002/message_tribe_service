@@ -4,6 +4,7 @@ import com.example.message_service.components.JwtTokenUtil;
 import com.example.message_service.dto.ApiResponse;
 import com.example.message_service.dto.request.LoginRequest;
 import com.example.message_service.dto.request.RegisterRequest;
+import com.example.message_service.dto.request.ResetPasswordAfterOTPRequest;
 import com.example.message_service.dto.request.ResetPasswordWithOTPRequest;
 import com.example.message_service.dto.request.VerifyOTPRequest;
 import com.example.message_service.service.UserService;
@@ -88,6 +89,12 @@ public class AuthController {
     @PostMapping("/reset-password-otp")
     public ResponseEntity<ApiResponse<String>> resetPasswordWithOTP(@Valid @RequestBody ResetPasswordWithOTPRequest request) {
         return ResponseEntity.ok(userService.resetPasswordWithOTP(request.getEmail(), request.getOtp(), request.getNewPassword()));
+    }
+
+    // ==== 8. Đặt lại mật khẩu sau khi verify OTP ====
+    @PostMapping("/reset-password-after-otp")
+    public ResponseEntity<ApiResponse<String>> resetPasswordAfterOTP(@Valid @RequestBody ResetPasswordAfterOTPRequest request) {
+        return ResponseEntity.ok(userService.resetPasswordAfterOTPVerification(request.getEmail(), request.getNewPassword()));
     }
 
 

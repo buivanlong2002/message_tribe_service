@@ -4,8 +4,8 @@
 
 1. **Nhấn "Quên mật khẩu"** → Chuyển sang trang nhập email
 2. **Nhập email** → Gửi mã OTP về gmail
-3. **Nhập mã OTP** → Xác thực OTP
-4. **Nhập mật khẩu mới** → Đặt lại mật khẩu
+3. **Nhập mã OTP** → Xác thực OTP (OTP sẽ bị xóa sau khi verify thành công)
+4. **Nhập mật khẩu mới** → Đặt lại mật khẩu (không cần OTP nữa)
 
 ## Các API Endpoints:
 
@@ -28,7 +28,7 @@ Content-Type: application/json
 }
 ```
 
-### 2. Xác thực OTP
+### 2. Xác thực OTP (OTP sẽ bị xóa sau khi verify thành công)
 ```
 POST /api/auth/verify-otp
 Content-Type: application/json
@@ -71,14 +71,13 @@ Content-Type: application/json
 }
 ```
 
-### 3. Đặt lại mật khẩu với OTP
+### 3. Đặt lại mật khẩu sau khi verify OTP (không cần OTP)
 ```
-POST /api/auth/reset-password-otp
+POST /api/auth/reset-password-after-otp
 Content-Type: application/json
 
 {
     "email": "user@example.com",
-    "otp": "123456",
     "newPassword": "newpassword123"
 }
 ```
@@ -92,12 +91,33 @@ Content-Type: application/json
 }
 ```
 
+### 4. Đặt lại mật khẩu với OTP (API cũ - vẫn hỗ trợ)
+```
+POST /api/auth/reset-password-otp
+Content-Type: application/json
+
+{
+    "email": "user@example.com",
+    "otp": "123456",
+    "newPassword": "newpassword123"
+}
+```
+
 ## Thông tin kỹ thuật:
 
 - **OTP**: 6 số ngẫu nhiên (000000-999999)
 - **Thời gian hết hạn**: 5 phút
 - **Email template**: Gửi qua SMTP Gmail
-- **Bảo mật**: OTP bị xóa sau khi sử dụng
+- **Bảo mật**: 
+  - OTP bị xóa sau khi verify thành công
+  - OTP bị xóa sau khi sử dụng để đổi mật khẩu
+  - Mỗi lần gửi OTP mới sẽ xóa OTP cũ
+
+## Luồng mới (Khuyến nghị):
+
+1. **Gửi OTP** → Lưu OTP vào database
+2. **Verify OTP** → Xóa OTP khỏi database, trả về thành công
+3. **Đổi mật khẩu** → Không cần OTP, chỉ cần email và mật khẩu mới
 
 ## Các file đã thay đổi:
 
@@ -106,6 +126,7 @@ Content-Type: application/json
 3. **DTO**: 
    - `VerifyOTPRequest.java` (mới)
    - `ResetPasswordWithOTPRequest.java` (mới)
+   - `ResetPasswordAfterOTPRequest.java` (mới)
 4. **Service**: 
    - `EmailService.java` - thêm method `sendOTPEmail()`
    - `UserService.java` - cập nhật logic OTP
@@ -113,7 +134,8 @@ Content-Type: application/json
 
 ## Lưu ý:
 
-- API cũ `/api/auth/reset-password` vẫn được giữ lại để tương thích ngược
+- API cũ `/api/auth/reset-password-otp` vẫn được giữ lại để tương thích ngược
+- API mới `/api/auth/reset-password-after-otp` là luồng được khuyến nghị
 - OTP được tạo ngẫu nhiên 6 số thay vì UUID
 - Thời gian hết hạn giảm từ 30 phút xuống 5 phút
 - Email template đã được cập nhật để hiển thị OTP thay vì link 

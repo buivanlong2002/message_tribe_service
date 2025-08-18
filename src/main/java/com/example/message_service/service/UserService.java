@@ -5,6 +5,7 @@ import com.example.message_service.dto.ApiResponse;
 import com.example.message_service.dto.request.ChangePasswordRequest;
 import com.example.message_service.dto.request.RegisterRequest;
 import com.example.message_service.dto.request.UpdateProfileRequest;
+import com.example.message_service.dto.response.UserResponse;
 import com.example.message_service.model.PasswordResetOTP;
 import com.example.message_service.model.PasswordResetToken;
 import com.example.message_service.model.User;
@@ -117,14 +118,37 @@ public class UserService {
     /**
      * Lấy thông tin người dùng theo ID
      */
-    public ApiResponse<User> getByUserId(String userId) {
+    public ApiResponse<UserResponse> getByUserId(String userId) {
         Optional<User> userOptional = userRepository.findById(userId);
 
         if (userOptional.isEmpty()) {
             return ApiResponse.error("01", "User không tồn tại");
         }
 
-        return ApiResponse.success("00", userOptional.get());
+        User user = userOptional.get();
+        UserResponse userResponse = convertToUserResponse(user);
+        return ApiResponse.success("00", userResponse);
+    }
+
+    /**
+     * Chuyển đổi User entity thành UserResponse DTO
+     */
+    private UserResponse convertToUserResponse(User user) {
+        return UserResponse.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .displayName(user.getDisplayName())
+                .phoneNumber(user.getPhoneNumber())
+                .birthday(user.getBirthday())
+                .avatarUrl(user.getAvatarUrl())
+                .status(user.getStatus())
+                .role(user.getRole())
+                .isBlocked(user.getIsBlocked())
+                .lastLoginAt(user.getLastLoginAt())
+                .loginCount(user.getLoginCount())
+                .createdAt(user.getCreatedAt())
+                .updatedAt(user.getUpdatedAt())
+                .build();
     }
 
     public ApiResponse<String> logoutUser(String username, String token) {
@@ -208,7 +232,27 @@ public class UserService {
             return ApiResponse.error("04", "Mã OTP đã hết hạn");
         }
 
+        // Xóa OTP sau khi verify thành công
+        passwordResetOTPRepository.delete(resetOTP);
+
         return ApiResponse.success("00", "Mã OTP hợp lệ");
+    }
+
+    @Transactional
+    public ApiResponse<String> resetPasswordAfterOTPVerification(String email, String newPassword) {
+        Optional<User> userOpt = userRepository.findByEmail(email);
+
+        if (userOpt.isEmpty()) {
+            return ApiResponse.error("01", "Email không tồn tại");
+        }
+
+        User user = userOpt.get();
+
+        // Đặt lại mật khẩu
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+
+        return ApiResponse.success("00", "Mật khẩu đã được đặt lại thành công");
     }
 
     @Transactional
