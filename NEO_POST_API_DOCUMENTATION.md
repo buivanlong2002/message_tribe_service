@@ -606,9 +606,7 @@ GET /api/neo-posts/{postId}/check-ownership
 {
   "code": "00",
   "message": "Kiểm tra quyền sở hữu thành công",
-  "data": {
-    "isOwner": true
-  }
+  "data": true
 }
 ```
 
@@ -629,9 +627,7 @@ GET /api/neo-posts/comments/{commentId}/check-ownership
 {
   "code": "00",
   "message": "Kiểm tra quyền sở hữu thành công",
-  "data": {
-    "isOwner": true
-  }
+  "data": true
 }
 ```
 
@@ -652,9 +648,7 @@ GET /api/neo-posts/replies/{replyId}/check-ownership
 {
   "code": "00",
   "message": "Kiểm tra quyền sở hữu thành công",
-  "data": {
-    "isOwner": true
-  }
+  "data": true
 }
 ```
 
@@ -675,9 +669,7 @@ GET /api/neo-posts/reactions/{reactionId}/check-ownership
 {
   "code": "00",
   "message": "Kiểm tra quyền sở hữu thành công",
-  "data": {
-    "isOwner": true
-  }
+  "data": true
 }
 ```
 
@@ -686,10 +678,18 @@ GET /api/neo-posts/reactions/{reactionId}/check-ownership
 | Mã | Mô tả |
 |----|-------|
 | 00 | Thành công |
-| 01 | Lỗi chung |
-| 02 | Không tìm thấy |
-| 03 | Không có quyền |
-| 04 | Dữ liệu không hợp lệ |
+| 01 | Lỗi chung (Bad Request) |
+| 99 | Lỗi Internal Server Error |
+
+## HTTP Status Codes
+
+| Status Code | Mô tả |
+|-------------|-------|
+| 200 | Thành công |
+| 400 | Bad Request - Dữ liệu không hợp lệ |
+| 401 | Unauthorized - Chưa đăng nhập |
+| 403 | Forbidden - Không có quyền truy cập |
+| 500 | Internal Server Error - Lỗi hệ thống |
 
 ## Lưu ý quan trọng
 
@@ -701,3 +701,5 @@ GET /api/neo-posts/reactions/{reactionId}/check-ownership
 6. **UUID**: Tất cả ID đều là UUID string
 7. **Nested data**: Response bao gồm đầy đủ thông tin user, comments, replies, reactions
 8. **Counts**: Mỗi bài viết đều có commentCount và reactionCount để hiển thị nhanh
+9. **Error handling**: Tất cả API đều trả về ApiResponse với code và message rõ ràng
+10. **Ownership check**: Các API check ownership trả về boolean trực tiếp trong data field
