@@ -50,9 +50,12 @@ public class NeoPostService {
     private boolean isPostOwnedByCurrentUser(String postId) {
         try {
             UserResponse currentUser = getCurrentUser();
-            // TODO: Implement proper ownership check when user relationship is set up
-            // This should check if the post belongs to the current user
-            return true; // Temporary return true for now
+            Optional<NeoPost> postOpt = neoPostRepository.findById(Long.valueOf(postId));
+            if (postOpt.isEmpty())
+                return false;
+
+            NeoPost post = postOpt.get();
+            return post.getUser() != null && post.getUser().getId().equals(currentUser.getId());
         } catch (Exception e) {
             return false;
         }
@@ -61,8 +64,12 @@ public class NeoPostService {
     private boolean isPostCommentOwnedByCurrentUser(String postCommentId) {
         try {
             UserResponse currentUser = getCurrentUser();
-            // TODO: Implement proper ownership check when user relationship is set up
-            return true; // Temporary return true for now
+            Optional<NeoPostComment> commentOpt = neoPostCommentRepository.findById(Long.valueOf(postCommentId));
+            if (commentOpt.isEmpty())
+                return false;
+
+            NeoPostComment comment = commentOpt.get();
+            return comment.getUser() != null && comment.getUser().getId().equals(currentUser.getId());
         } catch (Exception e) {
             return false;
         }
@@ -71,8 +78,13 @@ public class NeoPostService {
     private boolean isPostCommentReplyOwnedByCurrentUser(String postCommentReplyId) {
         try {
             UserResponse currentUser = getCurrentUser();
-            // TODO: Implement proper ownership check when user relationship is set up
-            return true; // Temporary return true for now
+            Optional<NeoPostCommentReply> replyOpt = neoPostCommentReplyRepository
+                    .findById(Long.valueOf(postCommentReplyId));
+            if (replyOpt.isEmpty())
+                return false;
+
+            NeoPostCommentReply reply = replyOpt.get();
+            return reply.getUser() != null && reply.getUser().getId().equals(currentUser.getId());
         } catch (Exception e) {
             return false;
         }
@@ -81,8 +93,12 @@ public class NeoPostService {
     private boolean isPostReactionOwnedByCurrentUser(String postReactionId) {
         try {
             UserResponse currentUser = getCurrentUser();
-            // TODO: Implement proper ownership check when user relationship is set up
-            return true; // Temporary return true for now
+            Optional<NeoPostReaction> reactionOpt = neoPostReactionRepository.findById(Long.valueOf(postReactionId));
+            if (reactionOpt.isEmpty())
+                return false;
+
+            NeoPostReaction reaction = reactionOpt.get();
+            return reaction.getUser() != null && reaction.getUser().getId().equals(currentUser.getId());
         } catch (Exception e) {
             return false;
         }
@@ -106,8 +122,9 @@ public class NeoPostService {
             post.setUrlMedia(mediaUrls);
         }
 
-        // TODO: Set user from currentUser - need to convert UserResponse to User entity
-        // post.setUser(userService.getUserById(currentUser.getId()));
+        // Set user from currentUser
+        User user = userService.getUserById(currentUser.getId());
+        post.setUser(user);
 
         NeoPost savedPost = neoPostRepository.save(post);
         NeoPostResponse response = convertToNeoPostResponse(savedPost);
@@ -201,10 +218,10 @@ public class NeoPostService {
         comment.setCreatedAt(LocalDateTime.now());
         comment.setUpdatedAt(LocalDateTime.now());
 
-        // TODO: Set post and user from currentUser - need to convert UserResponse to
-        // User entity
-        // comment.setNeoPost(postOpt.get());
-        // comment.setUser(userService.getUserById(currentUser.getId()));
+        // Set post and user from currentUser
+        comment.setNeoPost(postOpt.get());
+        User user = userService.getUserById(currentUser.getId());
+        comment.setUser(user);
 
         NeoPostComment savedComment = neoPostCommentRepository.save(comment);
         CommentResponse response = convertToCommentResponse(savedComment);
@@ -261,10 +278,10 @@ public class NeoPostService {
         reply.setCreatedAt(LocalDateTime.now());
         reply.setUpdatedAt(LocalDateTime.now());
 
-        // TODO: Set comment and user from currentUser - need to convert UserResponse to
-        // User entity
-        // reply.setNeoPostComment(commentOpt.get());
-        // reply.setUser(userService.getUserById(currentUser.getId()));
+        // Set comment and user from currentUser
+        reply.setNeoPostComment(commentOpt.get());
+        User user = userService.getUserById(currentUser.getId());
+        reply.setUser(user);
 
         NeoPostCommentReply savedReply = neoPostCommentReplyRepository.save(reply);
         ReplyResponse response = convertToReplyResponse(savedReply);
@@ -320,10 +337,10 @@ public class NeoPostService {
         reaction.setType(request.getType());
         reaction.setCreatedAt(LocalDateTime.now());
 
-        // TODO: Set post and user from currentUser - need to convert UserResponse to
-        // User entity
-        // reaction.setNeoPost(postOpt.get());
-        // reaction.setUser(userService.getUserById(currentUser.getId()));
+        // Set post and user from currentUser
+        reaction.setNeoPost(postOpt.get());
+        User user = userService.getUserById(currentUser.getId());
+        reaction.setUser(user);
 
         NeoPostReaction savedReaction = neoPostReactionRepository.save(reaction);
         ReactionResponse response = convertToReactionResponse(savedReaction);
@@ -395,8 +412,19 @@ public class NeoPostService {
     }
 
     private NeoPostResponse convertToNeoPostResponse(NeoPost post) {
+        // Convert user to UserResponse
+        UserResponse userResponse = null;
+        if (post.getUser() != null) {
+            userResponse = UserResponse.builder()
+                    .id(post.getUser().getId())
+                    .displayName(post.getUser().getDisplayName())
+                    .avatarUrl(post.getUser().getAvatarUrl())
+                    .build();
+        }
+
         return NeoPostResponse.builder()
                 .id(post.getId())
+                .user(userResponse)
                 .content(post.getContent())
                 .visibility(post.getVisibility())
                 .createdAt(post.getCreatedAt())
@@ -407,8 +435,19 @@ public class NeoPostService {
     }
 
     private CommentResponse convertToCommentResponse(NeoPostComment comment) {
+        // Convert user to UserResponse
+        UserResponse userResponse = null;
+        if (comment.getUser() != null) {
+            userResponse = UserResponse.builder()
+                    .id(comment.getUser().getId())
+                    .displayName(comment.getUser().getDisplayName())
+                    .avatarUrl(comment.getUser().getAvatarUrl())
+                    .build();
+        }
+
         return CommentResponse.builder()
                 .id(comment.getId())
+                .user(userResponse)
                 .content(comment.getContent())
                 .createdAt(comment.getCreatedAt())
                 .updatedAt(comment.getUpdatedAt())
@@ -416,8 +455,19 @@ public class NeoPostService {
     }
 
     private ReplyResponse convertToReplyResponse(NeoPostCommentReply reply) {
+        // Convert user to UserResponse
+        UserResponse userResponse = null;
+        if (reply.getUser() != null) {
+            userResponse = UserResponse.builder()
+                    .id(reply.getUser().getId())
+                    .displayName(reply.getUser().getDisplayName())
+                    .avatarUrl(reply.getUser().getAvatarUrl())
+                    .build();
+        }
+
         return ReplyResponse.builder()
                 .id(reply.getId())
+                .user(userResponse)
                 .content(reply.getContent())
                 .createdAt(reply.getCreatedAt())
                 .updatedAt(reply.getUpdatedAt())
@@ -425,8 +475,19 @@ public class NeoPostService {
     }
 
     private ReactionResponse convertToReactionResponse(NeoPostReaction reaction) {
+        // Convert user to UserResponse
+        UserResponse userResponse = null;
+        if (reaction.getUser() != null) {
+            userResponse = UserResponse.builder()
+                    .id(reaction.getUser().getId())
+                    .displayName(reaction.getUser().getDisplayName())
+                    .avatarUrl(reaction.getUser().getAvatarUrl())
+                    .build();
+        }
+
         return ReactionResponse.builder()
                 .id(reaction.getId())
+                .user(userResponse)
                 .type(reaction.getType())
                 .createdAt(reaction.getCreatedAt())
                 .build();
