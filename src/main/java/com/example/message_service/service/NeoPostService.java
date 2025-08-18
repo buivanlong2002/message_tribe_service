@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.UUID;
+import jakarta.transaction.Transactional;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -184,6 +185,7 @@ public class NeoPostService {
         return ApiResponse.success("00", "Xóa bài viết thành công", "Đã xóa bài viết");
     }
 
+    @Transactional
     public ApiResponse<Page<NeoPostResponse>> getNewsfeed(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         Page<NeoPost> posts = neoPostRepository.findByVisibilityAndDeletedAtIsNull(NeoPostVisibility.PUBLIC, pageable);
@@ -192,6 +194,7 @@ public class NeoPostService {
         return ApiResponse.success("00", "Lấy newsfeed thành công", response);
     }
 
+    @Transactional
     public ApiResponse<Page<NeoPostResponse>> getPublicPostsByUser(String userId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         Page<NeoPost> posts = neoPostRepository.findByUserIdAndVisibilityAndDeletedAtIsNull(userId,
@@ -201,6 +204,7 @@ public class NeoPostService {
         return ApiResponse.success("00", "Lấy bài viết public của user thành công", response);
     }
 
+    @Transactional
     public ApiResponse<Page<NeoPostResponse>> getMyPosts(int page, int size) throws Exception {
         UserResponse currentUser = getCurrentUser();
         Pageable pageable = PageRequest.of(page, size);
@@ -463,6 +467,21 @@ public class NeoPostService {
                     .build();
         }
 
+        // Map reactions
+        List<ReactionResponse> reactionResponses = post.getReactions() == null ? List.of()
+                : post.getReactions().stream().map(this::convertToReactionResponse).collect(Collectors.toList());
+
+        // Map comments with replies
+        List<CommentResponse> commentResponses = post.getComments() == null ? List.of()
+                : post.getComments().stream().map(c -> {
+                    CommentResponse cr = convertToCommentResponse(c);
+                    List<ReplyResponse> rr = c.getReplies() == null ? List.of()
+                            : c.getReplies().stream().map(this::convertToReplyResponse).collect(Collectors.toList());
+                    cr.setReplies(rr);
+                    cr.setReplyCount(rr.size());
+                    return cr;
+                }).collect(Collectors.toList());
+
         return NeoPostResponse.builder()
                 .id(post.getId())
                 .user(userResponse)
@@ -472,6 +491,10 @@ public class NeoPostService {
                 .updatedAt(post.getUpdatedAt())
                 .deletedAt(post.getDeletedAt())
                 .mediaUrls(post.getUrlMedia())
+                .reactions(reactionResponses)
+                .comments(commentResponses)
+                .reactionCount(reactionResponses.size())
+                .commentCount(commentResponses.size())
                 .build();
     }
 

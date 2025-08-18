@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -27,11 +28,11 @@ public class NeoPostController {
     /**
      * Người dùng hiện tại đăng bài viết
      */
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse<NeoPostResponse>> createPost(
-            @RequestBody CreatePostRequest request,
-            @RequestPart(required = false) MultipartFile[] mediaFiles) {
+            @RequestPart("request") CreatePostRequest request,
+            @RequestPart(value = "mediaFiles", required = false) MultipartFile[] mediaFiles) {
         try {
             ApiResponse<NeoPostResponse> response = neoPostService.createPost(request, mediaFiles);
             return ResponseEntity.ok(response);
