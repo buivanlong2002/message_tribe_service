@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ReplyResponse {
-    private Long id;
+    private String id;
     private UserResponse user;
     private String content;
     private LocalDateTime createdAt;

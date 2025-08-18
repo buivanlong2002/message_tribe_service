@@ -14,7 +14,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class NeoPostResponse {
-    private Long id;
+    private String id;
     private UserResponse user;
     private String content;
     private NeoPostVisibility visibility;

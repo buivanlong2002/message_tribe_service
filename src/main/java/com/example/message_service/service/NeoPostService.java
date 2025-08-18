@@ -58,7 +58,7 @@ public class NeoPostService {
     private boolean isPostOwnedByCurrentUser(String postId) {
         try {
             UserResponse currentUser = getCurrentUser();
-            Optional<NeoPost> postOpt = neoPostRepository.findById(Long.valueOf(postId));
+            Optional<NeoPost> postOpt = neoPostRepository.findById(postId);
             if (postOpt.isEmpty())
                 return false;
 
@@ -72,7 +72,7 @@ public class NeoPostService {
     private boolean isPostCommentOwnedByCurrentUser(String postCommentId) {
         try {
             UserResponse currentUser = getCurrentUser();
-            Optional<NeoPostComment> commentOpt = neoPostCommentRepository.findById(Long.valueOf(postCommentId));
+            Optional<NeoPostComment> commentOpt = neoPostCommentRepository.findById(postCommentId);
             if (commentOpt.isEmpty())
                 return false;
 
@@ -87,7 +87,7 @@ public class NeoPostService {
         try {
             UserResponse currentUser = getCurrentUser();
             Optional<NeoPostCommentReply> replyOpt = neoPostCommentReplyRepository
-                    .findById(Long.valueOf(postCommentReplyId));
+                    .findById(postCommentReplyId);
             if (replyOpt.isEmpty())
                 return false;
 
@@ -101,7 +101,7 @@ public class NeoPostService {
     private boolean isPostReactionOwnedByCurrentUser(String postReactionId) {
         try {
             UserResponse currentUser = getCurrentUser();
-            Optional<NeoPostReaction> reactionOpt = neoPostReactionRepository.findById(Long.valueOf(postReactionId));
+            Optional<NeoPostReaction> reactionOpt = neoPostReactionRepository.findById(postReactionId);
             if (reactionOpt.isEmpty())
                 return false;
 
@@ -145,7 +145,7 @@ public class NeoPostService {
             return ApiResponse.error("01", "Bạn không có quyền chỉnh sửa bài viết này");
         }
 
-        Optional<NeoPost> postOpt = neoPostRepository.findById(Long.valueOf(postId));
+        Optional<NeoPost> postOpt = neoPostRepository.findById(postId);
         if (postOpt.isEmpty()) {
             return ApiResponse.error("02", "Không tìm thấy bài viết");
         }
@@ -173,7 +173,7 @@ public class NeoPostService {
             return ApiResponse.error("01", "Bạn không có quyền xóa bài viết này");
         }
 
-        Optional<NeoPost> postOpt = neoPostRepository.findById(Long.valueOf(postId));
+        Optional<NeoPost> postOpt = neoPostRepository.findById(postId);
         if (postOpt.isEmpty()) {
             return ApiResponse.error("02", "Không tìm thấy bài viết");
         }
@@ -219,7 +219,7 @@ public class NeoPostService {
     public ApiResponse<CommentResponse> createComment(String postId, CreateCommentRequest request) throws Exception {
         UserResponse currentUser = getCurrentUser();
 
-        Optional<NeoPost> postOpt = neoPostRepository.findById(Long.valueOf(postId));
+        Optional<NeoPost> postOpt = neoPostRepository.findById(postId);
         if (postOpt.isEmpty()) {
             return ApiResponse.error("01", "Không tìm thấy bài viết");
         }
@@ -245,7 +245,7 @@ public class NeoPostService {
             return ApiResponse.error("01", "Bạn không có quyền chỉnh sửa comment này");
         }
 
-        Optional<NeoPostComment> commentOpt = neoPostCommentRepository.findById(Long.valueOf(commentId));
+        Optional<NeoPostComment> commentOpt = neoPostCommentRepository.findById(commentId);
         if (commentOpt.isEmpty()) {
             return ApiResponse.error("02", "Không tìm thấy comment");
         }
@@ -265,7 +265,7 @@ public class NeoPostService {
             return ApiResponse.error("01", "Bạn không có quyền xóa comment này");
         }
 
-        Optional<NeoPostComment> commentOpt = neoPostCommentRepository.findById(Long.valueOf(commentId));
+        Optional<NeoPostComment> commentOpt = neoPostCommentRepository.findById(commentId);
         if (commentOpt.isEmpty()) {
             return ApiResponse.error("02", "Không tìm thấy comment");
         }
@@ -279,7 +279,7 @@ public class NeoPostService {
     public ApiResponse<ReplyResponse> createReply(String commentId, CreateReplyRequest request) throws Exception {
         UserResponse currentUser = getCurrentUser();
 
-        Optional<NeoPostComment> commentOpt = neoPostCommentRepository.findById(Long.valueOf(commentId));
+        Optional<NeoPostComment> commentOpt = neoPostCommentRepository.findById(commentId);
         if (commentOpt.isEmpty()) {
             return ApiResponse.error("01", "Không tìm thấy comment");
         }
@@ -305,7 +305,7 @@ public class NeoPostService {
             return ApiResponse.error("01", "Bạn không có quyền chỉnh sửa reply này");
         }
 
-        Optional<NeoPostCommentReply> replyOpt = neoPostCommentReplyRepository.findById(Long.valueOf(replyId));
+        Optional<NeoPostCommentReply> replyOpt = neoPostCommentReplyRepository.findById(replyId);
         if (replyOpt.isEmpty()) {
             return ApiResponse.error("02", "Không tìm thấy reply");
         }
@@ -325,7 +325,7 @@ public class NeoPostService {
             return ApiResponse.error("01", "Bạn không có quyền xóa reply này");
         }
 
-        Optional<NeoPostCommentReply> replyOpt = neoPostCommentReplyRepository.findById(Long.valueOf(replyId));
+        Optional<NeoPostCommentReply> replyOpt = neoPostCommentReplyRepository.findById(replyId);
         if (replyOpt.isEmpty()) {
             return ApiResponse.error("02", "Không tìm thấy reply");
         }
@@ -339,7 +339,7 @@ public class NeoPostService {
     public ApiResponse<ReactionResponse> createReaction(String postId, CreateReactionRequest request) throws Exception {
         UserResponse currentUser = getCurrentUser();
 
-        Optional<NeoPost> postOpt = neoPostRepository.findById(Long.valueOf(postId));
+        Optional<NeoPost> postOpt = neoPostRepository.findById(postId);
         if (postOpt.isEmpty()) {
             return ApiResponse.error("01", "Không tìm thấy bài viết");
         }
@@ -365,7 +365,7 @@ public class NeoPostService {
             return ApiResponse.error("01", "Bạn không có quyền chỉnh sửa reaction này");
         }
 
-        Optional<NeoPostReaction> reactionOpt = neoPostReactionRepository.findById(Long.valueOf(reactionId));
+        Optional<NeoPostReaction> reactionOpt = neoPostReactionRepository.findById(reactionId);
         if (reactionOpt.isEmpty()) {
             return ApiResponse.error("02", "Không tìm thấy reaction");
         }
@@ -384,7 +384,7 @@ public class NeoPostService {
             return ApiResponse.error("01", "Bạn không có quyền xóa reaction này");
         }
 
-        Optional<NeoPostReaction> reactionOpt = neoPostReactionRepository.findById(Long.valueOf(reactionId));
+        Optional<NeoPostReaction> reactionOpt = neoPostReactionRepository.findById(reactionId);
         if (reactionOpt.isEmpty()) {
             return ApiResponse.error("02", "Không tìm thấy reaction");
         }

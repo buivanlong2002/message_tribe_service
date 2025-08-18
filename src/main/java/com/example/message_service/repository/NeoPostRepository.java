@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-public interface NeoPostRepository extends JpaRepository<NeoPost, Long> {
+public interface NeoPostRepository extends JpaRepository<NeoPost, String> {
     boolean existsByIdAndUserId(String id, String userId);
 
     @Query("SELECT p FROM NeoPost p WHERE p.visibility = :visibility AND p.deletedAt IS NULL ORDER BY p.createdAt DESC")

@@ -13,7 +13,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CommentResponse {
-    private Long id;
+    private String id;
     private UserResponse user;
     private String content;
     private LocalDateTime createdAt;

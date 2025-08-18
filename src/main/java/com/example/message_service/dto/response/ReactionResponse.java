@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ReactionResponse {
-    private Long id;
+    private String id;
     private UserResponse user;
     private NeoPostReactionType type;
     private LocalDateTime createdAt;
