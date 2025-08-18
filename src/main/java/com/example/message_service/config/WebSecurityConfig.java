@@ -48,6 +48,11 @@ public class WebSecurityConfig {
                                 "/ws/**",                     // WebSocket endpoint
                                 "/ws/info/**",                // SockJS dùng endpoint này để kiểm tra
 
+
+                                String.format("%s/auth/forgot-password", apiPrefix),
+                                String.format("%s/auth/verify-otp", apiPrefix),
+                                String.format("%s/auth/reset-password-after-otp", apiPrefix),
+
                                 // Public API endpoints
                                 String.format("%s/auth/login", apiPrefix),
                                 String.format("%s/auth/register", apiPrefix),
@@ -77,3 +82,10 @@ public class WebSecurityConfig {
     }
 
 }
+
+
+
+
+
+
+
