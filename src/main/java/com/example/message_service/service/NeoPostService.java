@@ -16,9 +16,16 @@ import com.example.message_service.repository.NeoPostCommentReplyRepository;
 import com.example.message_service.repository.NeoPostReactionRepository;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.UUID;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 
 @Service
 public class NeoPostService {
@@ -407,8 +414,42 @@ public class NeoPostService {
     // ==================== HELPER METHODS ====================
 
     private List<String> processMediaFiles(MultipartFile[] mediaFiles) {
-        // TODO: Implement media file processing logic
-        return List.of();
+        List<String> mediaUrls = new ArrayList<>();
+
+        if (mediaFiles == null || mediaFiles.length == 0) {
+            return mediaUrls;
+        }
+
+        try {
+            Path uploadPath = Paths.get("uploads", "neo-posts");
+            Files.createDirectories(uploadPath);
+
+            for (MultipartFile file : mediaFiles) {
+                if (file == null || file.isEmpty())
+                    continue;
+
+                String originalFilename = file.getOriginalFilename();
+                String extension = getFileExtension(originalFilename);
+                String uniqueName = UUID.randomUUID().toString() + extension;
+
+                Path filePath = uploadPath.resolve(uniqueName);
+                Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+
+                String publicUrl = "/uploads/neo-posts/" + uniqueName;
+                mediaUrls.add(publicUrl);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Lỗi khi lưu media của bài viết: " + e.getMessage(), e);
+        }
+
+        return mediaUrls;
+    }
+
+    private String getFileExtension(String fileName) {
+        if (fileName == null)
+            return "";
+        int idx = fileName.lastIndexOf('.');
+        return idx >= 0 ? fileName.substring(idx) : "";
     }
 
     private NeoPostResponse convertToNeoPostResponse(NeoPost post) {
