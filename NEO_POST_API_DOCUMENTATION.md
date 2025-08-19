@@ -85,7 +85,16 @@ PUT /api/neo-posts/{postId}
 |--------|------|-------|
 | postId | string | ID của bài viết cần cập nhật |
 
-### Request Body
+### Request Format
+**Content-Type:** `multipart/form-data`
+
+### Request Parameters
+| Trường | Kiểu | Bắt buộc | Mô tả |
+|--------|------|----------|-------|
+| request | string | Có | JSON string chứa thông tin cập nhật bài viết |
+| mediaFiles | file[] | Không | Danh sách các file media mới (ảnh/video) |
+
+### Request JSON Format (trong trường request)
 ```json
 {
   "content": "string",
@@ -96,12 +105,28 @@ PUT /api/neo-posts/{postId}
 }
 ```
 
-#### Trường dữ liệu
+#### Trường dữ liệu trong JSON
 | Trường | Kiểu | Bắt buộc | Mô tả |
 |--------|------|----------|-------|
-| content | string | Có | Nội dung mới của bài viết |
-| visibility | enum | Có | Quyền riêng tư mới |
-| mediaUrls | string[] | Không | Danh sách URL media mới |
+| content | string | Không | Nội dung mới của bài viết |
+| visibility | enum | Không | Quyền riêng tư mới (PUBLIC/PRIVATE) |
+| mediaUrls | string[] | Không | Danh sách URL media cũ (chỉ dùng khi không upload file mới) |
+
+#### Lưu ý
+- Nếu có `mediaFiles` mới được upload, chúng sẽ thay thế hoàn toàn danh sách media cũ
+- Nếu không có `mediaFiles` nhưng có `mediaUrls` trong JSON, sẽ sử dụng `mediaUrls`
+- Nếu không có cả `mediaFiles` và `mediaUrls`, danh sách media sẽ giữ nguyên
+- Các trường trong JSON đều không bắt buộc, chỉ cập nhật những trường có giá trị
+
+### Ví dụ Request với curl
+```bash
+curl -X PUT "http://localhost:8080/api/neo-posts/{postId}" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: multipart/form-data" \
+  -F 'request={"content":"Nội dung bài viết đã cập nhật","visibility":"PUBLIC"}' \
+  -F "mediaFiles=@/path/to/image1.jpg" \
+  -F "mediaFiles=@/path/to/image2.jpg"
+```
 
 ### Response
 ```json
