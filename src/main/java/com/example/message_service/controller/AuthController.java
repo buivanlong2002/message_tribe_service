@@ -7,6 +7,7 @@ import com.example.message_service.dto.request.RegisterRequest;
 import com.example.message_service.dto.request.ResetPasswordAfterOTPRequest;
 import com.example.message_service.dto.request.ResetPasswordWithOTPRequest;
 import com.example.message_service.dto.request.VerifyOTPRequest;
+import com.example.message_service.dto.response.UserResponse;
 import com.example.message_service.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,8 +35,7 @@ public class AuthController {
         try {
             ApiResponse<String> response = userService.loginUser(
                     loginRequest.getEmail(),
-                    loginRequest.getPassword()
-            );
+                    loginRequest.getPassword());
             return ResponseEntity.ok(response);
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -87,15 +87,46 @@ public class AuthController {
 
     // ==== 7. Đặt lại mật khẩu bằng OTP ====
     @PostMapping("/reset-password-otp")
-    public ResponseEntity<ApiResponse<String>> resetPasswordWithOTP(@Valid @RequestBody ResetPasswordWithOTPRequest request) {
-        return ResponseEntity.ok(userService.resetPasswordWithOTP(request.getEmail(), request.getOtp(), request.getNewPassword()));
+    public ResponseEntity<ApiResponse<String>> resetPasswordWithOTP(
+            @Valid @RequestBody ResetPasswordWithOTPRequest request) {
+        return ResponseEntity
+                .ok(userService.resetPasswordWithOTP(request.getEmail(), request.getOtp(), request.getNewPassword()));
     }
 
     // ==== 8. Đặt lại mật khẩu sau khi verify OTP ====
     @PostMapping("/reset-password-after-otp")
-    public ResponseEntity<ApiResponse<String>> resetPasswordAfterOTP(@Valid @RequestBody ResetPasswordAfterOTPRequest request) {
-        return ResponseEntity.ok(userService.resetPasswordAfterOTPVerification(request.getEmail(), request.getNewPassword()));
+    public ResponseEntity<ApiResponse<String>> resetPasswordAfterOTP(
+            @Valid @RequestBody ResetPasswordAfterOTPRequest request) {
+        return ResponseEntity
+                .ok(userService.resetPasswordAfterOTPVerification(request.getEmail(), request.getNewPassword()));
     }
 
+    // ==== 9. Lấy thông tin người dùng hiện tại ====
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse<UserResponse>> getCurrentUser() {
+        try {
+            UserResponse userResponse = userService.getCurrentUser();
+            ApiResponse<UserResponse> response = ApiResponse.success("00", "Lấy thông tin thành công", userResponse);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            // Xử lý các loại lỗi khác nhau
+            String errorCode;
+            String errorMessage = e.getMessage();
+
+            if (errorMessage.contains("chưa đăng nhập")) {
+                errorCode = "01";
+            } else if (errorMessage.contains("Email không hợp lệ")) {
+                errorCode = "02";
+            } else if (errorMessage.contains("User không tồn tại")) {
+                errorCode = "03";
+            } else {
+                errorCode = "99";
+                errorMessage = "Lỗi hệ thống: " + errorMessage;
+            }
+
+            ApiResponse<UserResponse> errorResponse = ApiResponse.error(errorCode, errorMessage);
+            return ResponseEntity.ok(errorResponse);
+        }
+    }
 
 }

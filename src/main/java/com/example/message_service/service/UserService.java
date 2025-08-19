@@ -15,6 +15,8 @@ import com.example.message_service.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -291,8 +293,6 @@ public class UserService {
         return ApiResponse.success("00", "Mật khẩu đã được đặt lại thành công");
     }
 
-
-
     public List<User> searchByEmail(String email) {
         return userRepository.searchByEmail(email);
     }
@@ -374,6 +374,31 @@ public class UserService {
     // lấy người dùng theo id
     public User getUserById(String userId) {
         return userRepository.findById(userId).orElse(null);
+    }
+
+    /**
+     * Lấy thông tin người dùng hiện tại từ SecurityContext
+     */
+    public UserResponse getCurrentUser() throws Exception {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new Exception("Người dùng chưa đăng nhập");
+        }
+
+        String email = authentication.getName();
+        if (email == null || email.isBlank()) {
+            throw new Exception("Email không hợp lệ");
+        }
+
+        Optional<User> userOptional = userRepository.findByEmail(email.trim().toLowerCase());
+
+        if (userOptional.isEmpty()) {
+            throw new Exception("User không tồn tại");
+        }
+
+        User user = userOptional.get();
+        return convertToUserResponse(user);
     }
 
 }

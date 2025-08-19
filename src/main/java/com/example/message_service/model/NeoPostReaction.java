@@ -2,34 +2,43 @@ package com.example.message_service.model;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
-import java.time.LocalDateTime;
 
-@Data
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "comment_reactions",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"comment_id", "user_id"}))
-public class CommentReaction {
+@Table(name = "neo_post_reactions")
+public class NeoPostReaction {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;
+
+    @PrePersist
+    public void generateId() {
+        if (this.id == null) {
+            this.id = UUID.randomUUID().toString();
+        }
+    }
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "comment_id", nullable = false)
-    private PostComment comment;
+    @JoinColumn(name = "post_id", nullable = false)
+    private NeoPost neoPost;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "reaction_type", nullable = false)
-    private ReactionType reactionType;
+    @Column(nullable = false)
+    private NeoPostReactionType type;
 
     @CreationTimestamp
     private LocalDateTime createdAt;
