@@ -15,8 +15,6 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.http.HttpStatus;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/api/neo-posts")
 @RequiredArgsConstructor
@@ -74,18 +72,37 @@ public class NeoPostController {
     /**
      * Người dùng hiện tại sửa bài viết của mình
      */
-    @PutMapping("/{postId}")
+    @PutMapping(value = "/{postId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse<NeoPostResponse>> updatePost(
             @PathVariable String postId,
-            @RequestBody UpdatePostRequest request) {
+            @RequestParam("request") String requestJson,
+            @RequestPart(value = "mediaFiles", required = false) MultipartFile[] mediaFiles) {
         try {
-            ApiResponse<NeoPostResponse> response = neoPostService.updatePost(postId, request);
+            log.info("Nhận update request JSON: {}", requestJson);
+
+            // Parse JSON string thành UpdatePostRequest
+            ObjectMapper objectMapper = new ObjectMapper();
+            UpdatePostRequest request;
+            try {
+                request = objectMapper.readValue(requestJson, UpdatePostRequest.class);
+            } catch (Exception e) {
+                log.error("Lỗi khi parse JSON: {}", e.getMessage());
+                return ResponseEntity.badRequest()
+                        .body(ApiResponse.error("01", "JSON không hợp lệ: " + e.getMessage()));
+            }
+
+            log.info("Đã parse update request: content={}, visibility={}, mediaFiles={}",
+                    request.getContent(), request.getVisibility(),
+                    mediaFiles != null ? mediaFiles.length : 0);
+
+            ApiResponse<NeoPostResponse> response = neoPostService.updatePost(postId, request, mediaFiles);
+            log.info("Cập nhật bài viết thành công với ID: {}", postId);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            log.error("Lỗi khi cập nhật bài viết: {}", e.getMessage());
-            return ResponseEntity.badRequest()
-                    .body(ApiResponse.error("01", "Lỗi khi cập nhật bài viết: " + e.getMessage()));
+            log.error("Lỗi khi cập nhật bài viết: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("99", "Lỗi khi cập nhật bài viết: " + e.getMessage()));
         }
     }
 

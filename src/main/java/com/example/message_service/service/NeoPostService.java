@@ -165,7 +165,8 @@ public class NeoPostService {
         }
     }
 
-    public ApiResponse<NeoPostResponse> updatePost(String postId, UpdatePostRequest request) throws Exception {
+    public ApiResponse<NeoPostResponse> updatePost(String postId, UpdatePostRequest request, MultipartFile[] mediaFiles)
+            throws Exception {
         if (!isPostOwnedByCurrentUser(postId)) {
             return ApiResponse.error("01", "Bạn không có quyền chỉnh sửa bài viết này");
         }
@@ -182,9 +183,18 @@ public class NeoPostService {
         if (request.getVisibility() != null) {
             post.setVisibility(request.getVisibility());
         }
-        if (request.getMediaUrls() != null) {
+
+        // Xử lý media files nếu có
+        if (mediaFiles != null && mediaFiles.length > 0) {
+            List<String> newMediaUrls = processMediaFiles(mediaFiles);
+            // Nếu có file mới được upload, thay thế danh sách media URLs hiện tại
+            post.setUrlMedia(newMediaUrls);
+            log.info("Đã cập nhật {} media files cho bài viết {}", newMediaUrls.size(), postId);
+        } else if (request.getMediaUrls() != null) {
+            // Nếu không có file mới nhưng có mediaUrls trong request, sử dụng mediaUrls đó
             post.setUrlMedia(request.getMediaUrls());
         }
+
         post.setUpdatedAt(LocalDateTime.now());
 
         NeoPost savedPost = neoPostRepository.save(post);
