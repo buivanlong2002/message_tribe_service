@@ -138,4 +138,20 @@ public class FriendshipController {
         return ResponseEntity.ok(response);
     }
 
+    // ✅ Hủy lời mời kết bạn đã gửi
+    @PostMapping("/cancel")
+    public ResponseEntity<ApiResponse<String>> cancelFriendRequest(
+            @RequestParam String senderId,
+            @RequestParam String receiverId) {
+        ApiResponse<String> response = friendshipService.cancelFriendRequest(senderId, receiverId);
+        return new ResponseEntity<>(response,
+                response.getStatus().isSuccess() ? HttpStatus.OK : HttpStatus.BAD_REQUEST);
+    }
+
+    // Test endpoint để kiểm tra dữ liệu friendship
+    @GetMapping("/test")
+    public ResponseEntity<ApiResponse<String>> testFriendshipData() {
+        return ResponseEntity.ok(friendshipService.testFriendshipData());
+    }
+
 }
