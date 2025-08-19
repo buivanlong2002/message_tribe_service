@@ -35,7 +35,7 @@ public class UserController {
 
     // Upload avatar
     @PostMapping("/avatar")
-    public ResponseEntity<?> uploadAvatar(@RequestParam("file") MultipartFile file,
+    public ApiResponse<String> uploadAvatar(@RequestParam("file") MultipartFile file,
                                           @AuthenticationPrincipal User user) {
         return userService.uploadAvatar(file, user);
     }

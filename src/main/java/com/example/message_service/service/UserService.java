@@ -158,23 +158,59 @@ public class UserService {
         return ApiResponse.success("00", "Logout thành công", null);
     }
 
-    public ResponseEntity<?> uploadAvatar(MultipartFile file, User user) {
+    public ApiResponse<String> uploadAvatar(MultipartFile file, User user) {
         try {
-            Path directory = Paths.get(uploadDir);
+            // Kiểm tra file
+            if (file == null || file.isEmpty()) {
+                return ApiResponse.error("01", "Không có file được chọn");
+            }
+
+            // Kiểm tra định dạng file
+            String contentType = file.getContentType();
+            if (contentType == null || !contentType.startsWith("image/")) {
+                return ApiResponse.error("02", "Chỉ chấp nhận file ảnh");
+            }
+
+            // Kiểm tra kích thước file (giới hạn 5MB)
+            if (file.getSize() > 5 * 1024 * 1024) {
+                return ApiResponse.error("03", "File quá lớn. Tối đa 5MB");
+            }
+
+            // Tạo thư mục uploads/avatar nếu chưa tồn tại
+            Path directory = Paths.get("uploads", "avatar");
             Files.createDirectories(directory);
 
-            String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
+            // Tạo tên file unique
+            String originalFilename = file.getOriginalFilename();
+            String fileExtension = getFileExtension(originalFilename);
+            String fileName = UUID.randomUUID().toString() + fileExtension;
+            
+            // Lưu file
             Path filePath = directory.resolve(fileName);
             Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
+            // Tạo URL avatar
             String avatarUrl = "/uploads/avatar/" + fileName;
+            
+            // Cập nhật avatar URL cho user
             user.setAvatarUrl(avatarUrl);
             userRepository.save(user);
 
-            return ResponseEntity.ok().body(avatarUrl);
+            return ApiResponse.success("00", "Tải lên ảnh đại diện thành công", avatarUrl);
+            
         } catch (IOException e) {
-            return ResponseEntity.status(500).body("Lỗi khi upload avatar");
+            return ApiResponse.error("99", "Lỗi khi upload avatar: " + e.getMessage());
+        } catch (Exception e) {
+            return ApiResponse.error("99", "Lỗi hệ thống: " + e.getMessage());
         }
+    }
+
+    // Helper method để lấy file extension
+    private String getFileExtension(String filename) {
+        if (filename == null || filename.lastIndexOf(".") == -1) {
+            return ".jpg"; // Default extension
+        }
+        return filename.substring(filename.lastIndexOf("."));
     }
 
     // ========== QUÊN MẬT KHẨU =================

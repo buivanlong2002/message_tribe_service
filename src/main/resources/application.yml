@@ -21,9 +21,9 @@ spring:
     date-format: yyyy-MM-dd'T'HH:mm:ss
 
   datasource:
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    url: jdbc:mysql://localhost:3306/tribe_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=Asia/Ho_Chi_Minh
+    username: root
+    password: 
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
@@ -50,7 +50,7 @@ spring:
 
 
 server:
-  port: ${PORT_SERVER}
+  port: 8080
 
 jwt:
   expiration: 3600000
