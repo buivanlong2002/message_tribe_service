@@ -29,7 +29,7 @@ public class NeoPostController {
      * Người dùng hiện tại đăng bài viết
      */
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<ApiResponse<NeoPostResponse>> createPost(
             @RequestParam("request") String requestJson,
             @RequestPart(value = "mediaFiles", required = false) MultipartFile[] mediaFiles) {
@@ -73,7 +73,7 @@ public class NeoPostController {
      * Người dùng hiện tại sửa bài viết của mình
      */
     @PutMapping(value = "/{postId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<ApiResponse<NeoPostResponse>> updatePost(
             @PathVariable String postId,
             @RequestParam("request") String requestJson,
@@ -110,7 +110,7 @@ public class NeoPostController {
      * Người dùng hiện tại xóa bài viết của mình
      */
     @DeleteMapping("/{postId}")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<ApiResponse<String>> deletePost(@PathVariable String postId) {
         try {
             ApiResponse<String> response = neoPostService.deletePost(postId);
@@ -159,7 +159,7 @@ public class NeoPostController {
      * trang
      */
     @GetMapping("/my-posts")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<ApiResponse<Page<NeoPostResponse>>> getMyPosts(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
@@ -178,7 +178,7 @@ public class NeoPostController {
      * Người dùng hiện tại comment vào bài viết
      */
     @PostMapping("/{postId}/comments")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<ApiResponse<CommentResponse>> createComment(
             @PathVariable String postId,
             @RequestBody CreateCommentRequest request) {
@@ -195,7 +195,7 @@ public class NeoPostController {
      * Người dùng hiện tại sửa comment của mình
      */
     @PutMapping("/comments/{commentId}")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<ApiResponse<CommentResponse>> updateComment(
             @PathVariable String commentId,
             @RequestBody UpdateCommentRequest request) {
@@ -213,7 +213,7 @@ public class NeoPostController {
      * Người dùng hiện tại xóa comment của mình
      */
     @DeleteMapping("/comments/{commentId}")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<ApiResponse<String>> deleteComment(@PathVariable String commentId) {
         try {
             ApiResponse<String> response = neoPostService.deleteComment(commentId);
@@ -230,7 +230,7 @@ public class NeoPostController {
      * Người dùng hiện tại reply vào comment
      */
     @PostMapping("/comments/{commentId}/replies")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<ApiResponse<ReplyResponse>> createReply(
             @PathVariable String commentId,
             @RequestBody CreateReplyRequest request) {
@@ -247,7 +247,7 @@ public class NeoPostController {
      * Người dùng hiện tại sửa reply của mình
      */
     @PutMapping("/replies/{replyId}")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<ApiResponse<ReplyResponse>> updateReply(
             @PathVariable String replyId,
             @RequestBody UpdateReplyRequest request) {
@@ -265,7 +265,7 @@ public class NeoPostController {
      * Người dùng hiện tại xóa reply của mình
      */
     @DeleteMapping("/replies/{replyId}")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<ApiResponse<String>> deleteReply(@PathVariable String replyId) {
         try {
             ApiResponse<String> response = neoPostService.deleteReply(replyId);
@@ -282,7 +282,7 @@ public class NeoPostController {
      * Người dùng hiện tại reaction vào bài viết
      */
     @PostMapping("/{postId}/reactions")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<ApiResponse<ReactionResponse>> createReaction(
             @PathVariable String postId,
             @RequestBody CreateReactionRequest request) {
@@ -299,7 +299,7 @@ public class NeoPostController {
      * Người dùng hiện tại sửa reaction của mình
      */
     @PutMapping("/reactions/{reactionId}")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<ApiResponse<ReactionResponse>> updateReaction(
             @PathVariable String reactionId,
             @RequestBody UpdateReactionRequest request) {
@@ -317,7 +317,7 @@ public class NeoPostController {
      * Người dùng hiện tại xóa reaction của mình
      */
     @DeleteMapping("/reactions/{reactionId}")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<ApiResponse<String>> deleteReaction(@PathVariable String reactionId) {
         try {
             ApiResponse<String> response = neoPostService.deleteReaction(reactionId);
@@ -334,7 +334,7 @@ public class NeoPostController {
      * Check post có phải của người dùng hiện tại
      */
     @GetMapping("/{postId}/check-ownership")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<ApiResponse<Boolean>> checkPostOwnership(@PathVariable String postId) {
         try {
             ApiResponse<Boolean> response = neoPostService.checkPostOwnership(postId);
@@ -350,7 +350,7 @@ public class NeoPostController {
      * Check comment có phải của người dùng hiện tại
      */
     @GetMapping("/comments/{commentId}/check-ownership")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<ApiResponse<Boolean>> checkCommentOwnership(@PathVariable String commentId) {
         try {
             ApiResponse<Boolean> response = neoPostService.checkCommentOwnership(commentId);
@@ -366,7 +366,7 @@ public class NeoPostController {
      * Check reply có phải của người dùng hiện tại
      */
     @GetMapping("/replies/{replyId}/check-ownership")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<ApiResponse<Boolean>> checkReplyOwnership(@PathVariable String replyId) {
         try {
             ApiResponse<Boolean> response = neoPostService.checkReplyOwnership(replyId);
@@ -382,7 +382,7 @@ public class NeoPostController {
      * Check reaction có phải của người dùng hiện tại
      */
     @GetMapping("/reactions/{reactionId}/check-ownership")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<ApiResponse<Boolean>> checkReactionOwnership(@PathVariable String reactionId) {
         try {
             ApiResponse<Boolean> response = neoPostService.checkReactionOwnership(reactionId);
