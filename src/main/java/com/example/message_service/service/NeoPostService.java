@@ -40,18 +40,21 @@ public class NeoPostService {
     private final NeoPostCommentRepository neoPostCommentRepository;
     private final NeoPostCommentReplyRepository neoPostCommentReplyRepository;
     private final NeoPostReactionRepository neoPostReactionRepository;
+    private final NotificationService notificationService;
 
     public NeoPostService(
             UserService userService,
             NeoPostRepository neoPostRepository,
             NeoPostCommentRepository neoPostCommentRepository,
             NeoPostCommentReplyRepository neoPostCommentReplyRepository,
-            NeoPostReactionRepository neoPostReactionRepository) {
+            NeoPostReactionRepository neoPostReactionRepository,
+            NotificationService notificationService) {
         this.userService = userService;
         this.neoPostRepository = neoPostRepository;
         this.neoPostCommentRepository = neoPostCommentRepository;
         this.neoPostCommentReplyRepository = neoPostCommentReplyRepository;
         this.neoPostReactionRepository = neoPostReactionRepository;
+        this.notificationService = notificationService;
     }
 
     // Helper method to get current user when needed
@@ -272,6 +275,13 @@ public class NeoPostService {
         NeoPostComment savedComment = neoPostCommentRepository.save(comment);
         CommentResponse response = convertToCommentResponse(savedComment);
 
+        // Tạo thông báo
+        if (!currentUser.getId().equals(postOpt.get().getUser().getId())) {
+            User receiver = postOpt.get().getUser();
+            String content = currentUser.getDisplayName() + " đã bình luận vào bài viết của bạn";
+            notificationService.createNotification(NotificationType.COMMENT, receiver, content);
+        }
+
         return ApiResponse.success("00", "Tạo comment thành công", response);
     }
 
@@ -332,6 +342,13 @@ public class NeoPostService {
         NeoPostCommentReply savedReply = neoPostCommentReplyRepository.save(reply);
         ReplyResponse response = convertToReplyResponse(savedReply);
 
+        // Tạo thông báo
+        if (!currentUser.getId().equals(commentOpt.get().getUser().getId())) {
+            User receiver = commentOpt.get().getUser();
+            String content = currentUser.getDisplayName() + " đã reply vào bình luận của bạn";
+            notificationService.createNotification(NotificationType.COMMENT_REPLY, receiver, content);
+        }
+
         return ApiResponse.success("00", "Tạo reply thành công", response);
     }
 
@@ -390,6 +407,13 @@ public class NeoPostService {
 
         NeoPostReaction savedReaction = neoPostReactionRepository.save(reaction);
         ReactionResponse response = convertToReactionResponse(savedReaction);
+
+        // Tạo thông báo
+        if (!currentUser.getId().equals(postOpt.get().getUser().getId())) {
+            User receiver = postOpt.get().getUser();
+            String content = currentUser.getDisplayName() + " đã reaction vào bài viết của bạn";
+            notificationService.createNotification(NotificationType.REACTION, receiver, content);
+        }
 
         return ApiResponse.success("00", "Tạo reaction thành công", response);
     }
