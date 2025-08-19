@@ -112,7 +112,11 @@ public class FriendshipService {
         }
 
         User user = userOpt.get();
-        List<Friendship> friendships = friendshipRepository.findBySenderOrReceiver(user, user);
+        
+        // Tìm tất cả friendship mà user tham gia vào (có thể là sender hoặc receiver)
+        List<Friendship> friendships = friendshipRepository.findFriendshipsByUser(user);
+        
+        System.out.println("Found " + friendships.size() + " friendships for user: " + userId);
 
         List<FriendResponse> friends = friendships.stream()
                 .filter(f -> "accepted".equals(f.getStatus()))
@@ -121,6 +125,8 @@ public class FriendshipService {
                     return new FriendResponse(friend.getId(), friend.getDisplayName(), friend.getAvatarUrl());
                 })
                 .collect(Collectors.toList());
+                
+        System.out.println("Found " + friends.size() + " accepted friendships for user: " + userId);
 
         return ApiResponse.success("00", "Lấy danh sách bạn bè thành công", friends);
     }
@@ -268,6 +274,52 @@ public class FriendshipService {
                 .collect(Collectors.toList());
 
         return ApiResponse.success("00", "Lấy danh sách lời mời kết bạn đã gửi thành công", dtoList);
+    }
+
+    // ✅ Hủy lời mời kết bạn đã gửi
+    public ApiResponse<String> cancelFriendRequest(String senderId, String receiverId) {
+        Optional<User> senderOpt = userRepository.findById(senderId);
+        Optional<User> receiverOpt = userRepository.findById(receiverId);
+
+        if (senderOpt.isEmpty() || receiverOpt.isEmpty()) {
+            return ApiResponse.error("01", "Người dùng không tồn tại");
+        }
+
+        User sender = senderOpt.get();
+        User receiver = receiverOpt.get();
+
+        Optional<Friendship> friendshipOpt = friendshipRepository.findBySenderAndReceiver(sender, receiver);
+        if (friendshipOpt.isEmpty()) {
+            return ApiResponse.error("02", "Không tìm thấy lời mời kết bạn để hủy");
+        }
+
+        Friendship friendship = friendshipOpt.get();
+        if (!"pending".equals(friendship.getStatus())) {
+            return ApiResponse.error("03", "Lời mời kết bạn không ở trạng thái chờ");
+        }
+
+        friendshipRepository.delete(friendship);
+        return ApiResponse.success("00", "Đã hủy lời mời kết bạn thành công", null);
+    }
+
+    // Test method để kiểm tra dữ liệu friendship
+    public ApiResponse<String> testFriendshipData() {
+        List<Friendship> allFriendships = friendshipRepository.findAll();
+        List<User> allUsers = userRepository.findAll();
+        
+        StringBuilder result = new StringBuilder();
+        result.append("Total friendships in database: ").append(allFriendships.size()).append("\n");
+        result.append("Total users in database: ").append(allUsers.size()).append("\n");
+        
+        for (Friendship f : allFriendships) {
+            result.append("Friendship ID: ").append(f.getId())
+                  .append(", Sender: ").append(f.getSender().getDisplayName())
+                  .append(", Receiver: ").append(f.getReceiver().getDisplayName())
+                  .append(", Status: ").append(f.getStatus())
+                  .append("\n");
+        }
+        
+        return ApiResponse.success("00", "Test data", result.toString());
     }
 
 }

@@ -7,13 +7,20 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 import java.util.List;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 @Repository
 public interface FriendshipRepository extends JpaRepository<Friendship, String> {
 
     Optional<Friendship> findBySenderAndReceiver(User sender, User receiver);
 
-    List<Friendship> findBySenderOrReceiver(User user, User user2);
+    // Tìm tất cả friendship mà user tham gia vào (có thể là sender hoặc receiver)
+    List<Friendship> findBySenderOrReceiver(User user1, User user2);
+
+    // Tìm tất cả friendship mà user tham gia vào (có thể là sender hoặc receiver)
+    @Query("SELECT f FROM Friendship f WHERE (f.sender = :user OR f.receiver = :user)")
+    List<Friendship> findFriendshipsByUser(@Param("user") User user);
 
     List<Friendship> findByStatusAndReceiver(String status, User receiver);
 
