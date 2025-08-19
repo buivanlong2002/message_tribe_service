@@ -60,23 +60,40 @@ public class ConversationService {
     // ----------------- CREATE --------------------
 
     public ApiResponse<Conversation> createGroupConversation(String name, String createdBy) {
-        if (name == null || name.trim().isEmpty()) {
-            return ApiResponse.error("01", "Tên nhóm không được để trống");
+        try {
+            if (name == null || name.trim().isEmpty()) {
+                return ApiResponse.error("01", "Tên nhóm không được để trống");
+            }
+
+            if (createdBy == null || createdBy.trim().isEmpty()) {
+                return ApiResponse.error("02", "Người tạo không được để trống");
+            }
+
+            // Kiểm tra user có tồn tại không
+            Optional<User> userOpt = userRepository.findById(createdBy);
+            if (userOpt.isEmpty()) {
+                return ApiResponse.error("03", "Không tìm thấy người dùng với ID: " + createdBy);
+            }
+
+            Conversation conversation = new Conversation();
+            conversation.setName(name.trim());
+            conversation.setGroup(true);
+            conversation.setCreatedBy(createdBy);
+            conversation.setCreatedAt(LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")));
+            
+            Conversation saved = conversationRepository.save(conversation);
+            
+            // Thêm creator vào conversation
+            ApiResponse<String> addCreatorResult = conversationMemberService.addCreatorToConversation(saved);
+            if (!addCreatorResult.getStatus().isSuccess()) {
+                return ApiResponse.error("04", "Lỗi khi thêm người tạo vào nhóm: " + addCreatorResult.getStatus().getDisplayMessage());
+            }
+
+            return ApiResponse.success("00", "Tạo nhóm thành công", saved);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ApiResponse.error("99", "Lỗi khi tạo nhóm: " + e.getMessage());
         }
-
-        if (createdBy == null || createdBy.trim().isEmpty()) {
-            return ApiResponse.error("02", "Người tạo không được để trống");
-        }
-
-        Conversation conversation = new Conversation();
-        conversation.setName(name.trim());
-        conversation.setGroup(true);
-        conversation.setCreatedBy(createdBy);
-        conversation.setCreatedAt(LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")));
-        Conversation saved = conversationRepository.save(conversation);
-        conversationMemberService.addCreatorToConversation(saved);
-
-        return ApiResponse.success("00", "Tạo nhóm thành công", saved);
     }
 
 
