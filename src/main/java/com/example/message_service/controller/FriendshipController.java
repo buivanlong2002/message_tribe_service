@@ -25,7 +25,11 @@ public class FriendshipController {
 
     @Autowired
     private FriendshipService friendshipService;
+
+    @Autowired
     private UserService userService;
+
+    @Autowired
     private NotificationService notificationService;
 
     // Gửi lời mời kết bạn
@@ -33,14 +37,6 @@ public class FriendshipController {
     public ResponseEntity<ApiResponse<String>> sendFriendRequest(
             @RequestParam String senderId,
             @RequestParam String receiverId) {
-
-        // User sender = userService.getUserById(senderId);
-        // User receiver = userService.getUserById(receiverId);
-
-        // notificationService.createNotification(
-        // NotificationType.FRIEND_REQUEST,
-        // receiver,
-        // sender.getDisplayName() + " đã gửi lời mời kết bạn");
 
         ApiResponse<String> response = friendshipService.sendFriendRequest(senderId, receiverId);
 
@@ -57,14 +53,6 @@ public class FriendshipController {
             @RequestParam String senderId,
             @RequestParam String receiverId) {
 
-        // User sender = userService.getUserById(senderId);
-        // User receiver = userService.getUserById(receiverId);
-        // thêm thông báo chấp nhận lời mời kết bạn
-        // notificationService.createNotification(
-        //         NotificationType.FRIEND_ACCEPTED,
-        //         receiver,
-        //         sender.getDisplayName() + " đã chấp nhận lời mời kết bạn");
-
         ApiResponse<String> response = friendshipService.acceptFriendRequest(senderId, receiverId);
         if (response.getStatus().isSuccess()) {
             return ResponseEntity.ok(response);
@@ -79,14 +67,6 @@ public class FriendshipController {
             @RequestParam String senderId,
             @RequestParam String receiverId) {
         ApiResponse<String> response = friendshipService.rejectFriendRequest(senderId, receiverId);
-
-        // User sender = userService.getUserById(senderId);
-        // User receiver = userService.getUserById(receiverId);
-        // Thêm thông báo từ chối lời mời kết bạn
-        // notificationService.createNotification(
-        //         NotificationType.FRIEND_REQUEST_REJECTED,
-        //         receiver,
-        //         sender.getDisplayName() + " đã từ chối lời mời kết bạn");
 
         if (response.getStatus().isSuccess()) {
             return ResponseEntity.ok(response);
