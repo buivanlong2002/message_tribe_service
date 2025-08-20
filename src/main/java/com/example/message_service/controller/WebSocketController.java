@@ -53,6 +53,9 @@ public class WebSocketController {
         String userId = request.getUserId();
         int page = request.getPage();
         int size = request.getSize();
+        
+
+        
         if (conversationId == null || userId == null || conversationId.isEmpty() || userId.isEmpty()) {
             return;
         }
@@ -63,9 +66,6 @@ public class WebSocketController {
         if (response.getData() != null) {
             String destination = "/topic/messages/" + conversationId + "/" + userId;
             messagingTemplate.convertAndSend(destination, response.getData());
-            log.info("Đã gửi danh sách tin nhắn của cuộc trò chuyện {} tới user {}", conversationId, userId);
-        } else {
-            log.warn("Không có tin nhắn nào trong cuộc trò chuyện {} cho user {}", conversationId, userId);
         }
     }
 

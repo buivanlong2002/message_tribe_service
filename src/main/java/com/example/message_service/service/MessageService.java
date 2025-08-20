@@ -7,6 +7,7 @@ import com.example.message_service.mapper.MessageMapper;
 import com.example.message_service.model.*;
 import com.example.message_service.repository.*;
 import com.example.message_service.service.util.PushNewMessage;
+import com.example.message_service.service.CallHistoryService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,7 +41,8 @@ public class MessageService {
     @Autowired private PushNewMessage pushNewMessage;
     @Autowired private ConversationMemberRepository conversationMemberRepository;
     @Autowired private MessageStatusRepository messageStatusRepository;
-    @Autowired   private  SimpMessagingTemplate messagingTemplate;
+    @Autowired private SimpMessagingTemplate messagingTemplate;
+    @Autowired private CallHistoryService callHistoryService;
 
     private static final long MAX_VIDEO_SIZE = 100 * 1024 * 1024;
 
@@ -237,7 +239,23 @@ public class MessageService {
                 })
                 .collect(Collectors.toList());
 
-        Collections.reverse(responseList);
+        // Lấy call history cho conversation này
+        List<CallHistory> callHistoryList = callHistoryService.getCallHistoryByConversation(conversationId);
+        
+        // Chuyển đổi call history thành MessageResponse với type CALL
+        List<MessageResponse> callHistoryResponses = callHistoryList.stream()
+                .map(callHistory -> messageMapper.toCallHistoryMessageResponse(callHistory))
+                .collect(Collectors.toList());
+
+        // Kết hợp messages và call history
+        responseList.addAll(callHistoryResponses);
+
+        // Sắp xếp lại theo thời gian (từ cũ đến mới)
+        responseList.sort((a, b) -> {
+            LocalDateTime timeA = a.getCreatedAt() != null ? a.getCreatedAt() : LocalDateTime.now();
+            LocalDateTime timeB = b.getCreatedAt() != null ? b.getCreatedAt() : LocalDateTime.now();
+            return timeA.compareTo(timeB);
+        });
 
         return ApiResponse.success("00", "Lấy danh sách tin nhắn thành công", responseList);
     }

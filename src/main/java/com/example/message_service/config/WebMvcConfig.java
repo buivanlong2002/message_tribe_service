@@ -13,4 +13,13 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .addResourceLocations("file:uploads/");
     }
 
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**")
+                .allowedOriginPatterns("*") // Allow all origins for production
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedHeaders("*")
+                .allowCredentials(true)
+                .maxAge(3600);
+    }
 }
