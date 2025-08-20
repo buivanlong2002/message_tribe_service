@@ -81,6 +81,11 @@ public class UserService {
             return ApiResponse.error("02", "Mật khẩu không đúng");
         }
 
+        // Kiểm tra user có bị blocked không
+        if (user.getIsBlocked()) {
+            return ApiResponse.error("03", "Tài khoản đã bị chặn. Vui lòng liên hệ admin.");
+        }
+
         // Cập nhật thông tin đăng nhập
         updateLoginInfo(user);
 

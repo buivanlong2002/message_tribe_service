@@ -44,6 +44,26 @@ public class NotificationService {
 
     // Xóa thông báo
     public void deleteNotification(Long notificationId) {
+        Notification notification = notificationRepository.findById(notificationId)
+                .orElseThrow(() -> new RuntimeException("Notification not found"));
         notificationRepository.deleteById(notificationId);
+    }
+
+    // Tạo thông báo cho friendship
+    public Notification createFriendshipNotification(NotificationType type, User receiver, User sender, String action) {
+        String content = sender.getDisplayName() + " " + action;
+        return createNotification(type, receiver, content);
+    }
+
+    // Tạo thông báo cho lời mời kết bạn
+    public Notification createFriendRequestNotification(User receiver, User sender) {
+        return createFriendshipNotification(NotificationType.FRIEND_REQUEST, receiver, sender,
+                "đã gửi lời mời kết bạn");
+    }
+
+    // Tạo thông báo cho việc chấp nhận lời mời kết bạn
+    public Notification createFriendAcceptedNotification(User sender, User receiver) {
+        return createFriendshipNotification(NotificationType.FRIEND_ACCEPTED, sender, receiver,
+                "đã chấp nhận lời mời kết bạn của bạn");
     }
 }

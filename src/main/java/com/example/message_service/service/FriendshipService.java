@@ -8,6 +8,7 @@ import com.example.message_service.model.Friendship;
 import com.example.message_service.model.User;
 import com.example.message_service.repository.FriendshipRepository;
 import com.example.message_service.repository.UserRepository;
+import com.example.message_service.service.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +25,9 @@ public class FriendshipService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private NotificationService notificationService;
 
     public ApiResponse<String> sendFriendRequest(String senderId, String receiverId) {
         // Tìm sender và receiver
@@ -51,9 +55,11 @@ public class FriendshipService {
         friendship.setStatus("pending");
         friendshipRepository.save(friendship);
 
-        return ApiResponse.success("00","Lời mời kết bạn đã được gửi");
-    }
+        // Tạo thông báo cho người nhận lời mời kết bạn
+        notificationService.createFriendRequestNotification(receiver, sender);
 
+        return ApiResponse.success("00", "Lời mời kết bạn đã được gửi");
+    }
 
     public ApiResponse<String> acceptFriendRequest(String senderId, String receiverId) {
         Optional<User> senderOpt = userRepository.findById(senderId);
@@ -80,9 +86,11 @@ public class FriendshipService {
         friendship.setAcceptedAt(LocalDateTime.now());
         friendshipRepository.save(friendship);
 
+        // Tạo thông báo cho người gửi lời mời kết bạn
+        notificationService.createFriendAcceptedNotification(sender, receiver);
+
         return ApiResponse.success("00", "Lời mời kết bạn đã được chấp nhận", null);
     }
-
 
     // Từ chối lời mời kết bạn
     public ApiResponse<String> rejectFriendRequest(String senderId, String receiverId) {
@@ -125,10 +133,8 @@ public class FriendshipService {
         return ApiResponse.success("00", "Lấy danh sách bạn bè thành công", friends);
     }
 
-
-
-
-    // Lấy tất cả lời mời kết bạn đang chờ chấp nhận (status = "pending") cho một người nhận
+    // Lấy tất cả lời mời kết bạn đang chờ chấp nhận (status = "pending") cho một
+    // người nhận
     public ApiResponse<List<PendingFriendRequestResponse>> getPendingRequests(String userId) {
         Optional<User> receiverOpt = userRepository.findById(userId);
         if (receiverOpt.isEmpty()) {
@@ -155,8 +161,7 @@ public class FriendshipService {
                             receiver.getId(),
                             receiver.getDisplayName(),
                             receiver.getAvatarUrl(),
-                            f.getRequestedAt()
-                    );
+                            f.getRequestedAt());
                 })
                 .collect(Collectors.toList());
 
@@ -178,14 +183,12 @@ public class FriendshipService {
                     return new BlockedUserResponse(
                             blocked.getId(),
                             blocked.getDisplayName(),
-                            blocked.getAvatarUrl()
-                    );
+                            blocked.getAvatarUrl());
                 })
                 .collect(Collectors.toList());
 
         return ApiResponse.success("00", "Lấy danh sách người bị chặn thành công", blockedUsers);
     }
-
 
     public ApiResponse<String> unblockUser(String senderId, String receiverId) {
         Optional<User> senderOpt = userRepository.findById(senderId);
@@ -259,11 +262,10 @@ public class FriendshipService {
                             sender.getId(),
                             sender.getDisplayName(),
                             sender.getAvatarUrl(),
-                            receiver.getId(),                  // ✅ truyền thêm receiverId
+                            receiver.getId(), // ✅ truyền thêm receiverId
                             receiver.getDisplayName(),
                             receiver.getAvatarUrl(),
-                            f.getRequestedAt()
-                    );
+                            f.getRequestedAt());
                 })
                 .collect(Collectors.toList());
 
