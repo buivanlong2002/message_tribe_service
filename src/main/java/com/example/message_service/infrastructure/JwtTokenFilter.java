@@ -32,8 +32,8 @@ public class JwtTokenFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain)
+            HttpServletResponse response,
+            FilterChain filterChain)
             throws ServletException, IOException {
         try {
             if (isBypassToken(request)) {
@@ -56,12 +56,21 @@ public class JwtTokenFilter extends OncePerRequestFilter {
             if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = userDetailsService.loadUserByUsername(email);
 
-                if (jwtTokenUtil.validateToken(token, userDetails)
-                ) {
+                if (jwtTokenUtil.validateToken(token, userDetails)) {
+                    // Kiểm tra user có bị blocked không
+                    if (userDetails instanceof com.example.message_service.model.User) {
+                        com.example.message_service.model.User user = (com.example.message_service.model.User) userDetails;
+                        if (user.getIsBlocked()) {
+                            if (!response.isCommitted()) {
+                                response.sendError(HttpServletResponse.SC_FORBIDDEN,
+                                        "Tài khoản đã bị chặn. Vui lòng liên hệ admin.");
+                            }
+                            return;
+                        }
+                    }
 
-                    UsernamePasswordAuthenticationToken authentication =
-                            new UsernamePasswordAuthenticationToken(
-                                    userDetails, null, userDetails.getAuthorities());
+                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                            userDetails, null, userDetails.getAuthorities());
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 }
@@ -85,8 +94,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                 Pair.of(String.format("%s/auth/verify-otp", apiPrefix), "POST"),
                 Pair.of(String.format("%s/auth/reset-password-otp", apiPrefix), "POST"),
                 Pair.of(String.format("%s/auth/reset-password-after-otp", apiPrefix), "POST"),
-                Pair.of(String.format("%s/auth/reset-password", apiPrefix), "POST")
-        );
+                Pair.of(String.format("%s/auth/reset-password", apiPrefix), "POST"));
 
         String path = request.getServletPath();
 
