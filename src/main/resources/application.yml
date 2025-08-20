@@ -10,8 +10,8 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-    username: hoang1111uuu@gmail.com
-    password: "mbae ylxt xllb jkdv"
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
     properties:
       mail.smtp.auth: true
       mail.smtp.starttls.enable: true
@@ -21,9 +21,9 @@ spring:
     date-format: yyyy-MM-dd'T'HH:mm:ss
 
   datasource:
-    url: jdbc:mysql://localhost:3306/cgm6_tribe
-    username: root
-    password: haha123
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
@@ -36,10 +36,10 @@ spring:
 
   data:
     redis:
-      host: localhost
-      port: 6379
-      username: default
-      password: 
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+      username: ${REDIS_USERNAME}
+      password: ${REDIS_PASSWORD}
       timeout: 6000
 
   thymeleaf:
@@ -48,14 +48,19 @@ spring:
     mode: HTML
     cache: false
 
+
 server:
-  port: 8080
+  port: ${PORT_SERVER:8080}
+  servlet:
+    context-path: /
+  compression:
+    enabled: true
+    mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json
 
 jwt:
   expiration: 3600000
-  private-key: "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDf7jnY/Lkwb2Z2\nzf+/PbsIFtHNvj2ggana3DKYPRfYaDfdohLUgtw4nxwp69orhZWJUNUWc/O1uuOR\nBKWz0wCkVIXngQ1evAczCr8IbWOhmCLYjGHZ6m+E+vj+pF98NtpokvV1UCpMV5Wh\nmEeZHLGhN450GI+4O02KSQkAAhdf1PB3vtULQ+B8t3Kp1R0QgdidUp1FQ4xPpKow\nVlcMzXtQpRNgFFJAHkXukOVcyhB4gxc/+i+71+7KCeHglXeM6vv6hCbf9Iay38ml\nvr1+Vae5chAy4ZCzoM3hm8A0BBU99leoc9ZRlh5jWNJ9v3GNpWMzYeac/0Top+kQ\n/PRzlogBAgMBAAECggEACjppfjr9ygIDuOPsG5Bve403R9OAy/+x8+MZXBE7ownX\nmaBSFBW73DuOfFJfa7hf9vQFdBaJT4gEkLonDvw1EzAEQ4X4DuyvfiogRTRh5hBs\njUGUQNTd5uyALesqHj8dYafcwTRy9NEObrbJIt2O/UTsBusOD0Han9WWZfwHzYLM\nMlBYeRX3QLLfivqaxD7O9op2UN5NxHT+s0OKprgA3SF9p6aSIJpTGJ6TIWzQNSjx\nEZJbK6lEiCROP8MEyBKBiNfbQx8qsFHF4jZZ/0hU1qz1dVhvglyY/S1KSjCK8TU8\ngYWiXcY8UkG+JIgEx3oM1kf9V6RL1KXphpU5r82xlQKBgQD48CEqwnlB+Kkuftq3\niNXYlbWkvCcFBTrStt39dAi8fhi7bvT6JFHwZiLvSUsL1XVMRClvbLzhCT1tmJ6S\n6WxjLKBmw6Ws7fuRJLyIJfxotgRjyUeSbI1lpO7CFV94sdf20KROB1EN/TXWnK55\nd9oYdle+G1KLWsH2LAXGSU9fBwKBgQDmSHvuce/KoowTCPAeMMDPq+O/DobopIPa\n2qq6iQ/2fn/Am0T0PBExsfuEwJzlZVVh3Smx/NX0tUu7XJSVfJY0oVaTeIwxwZ8J\nWHYgmsAu4MM181OfYIXvrqtYy+5H2L0vbtiscJHCDIGI+6sUFXnjTBKjTpyuwUel\nQbgg/hkWtwKBgQCUKWe0KXc+Op+HGt1Wa0zL0Z8A4zNeG5S9ITXSyiMA/RP/SrTn\nxII4ULHuNXNDIdLkh5UZymBIl9VFy5Zl3iQyircVMtECscoOwwyrA+DM+bh3I69D\niPRHUPkB7vKZxU/CiL+h6VzmtJQ8nZiCl0DpWlYywdRJOMVEnUL6l1t0NQKBgDtZ\nDueC4aO9hJAbS5bcRbS/vfAtVEN8sqaimEF+tWh3bYE8AudW26+NCR9LbKQKG5kf\nIHHIkXOBjcT5tSlZdHSX5/IVrTvdhJkp/Tel6kWqk2TCExkODTaaM3qtA/nsN8WT\nsa+vS0FRa8jb41lHt6QGpP8FcYfwNAC5ETUfh2O9AoGANcJXiZDI1tRgKCuD8xzs\nfFsg4FLGzjijddZIBj73ahFe6vcyuTYWa0ZsyfNnsRkNrWLSn8i+/2azt5ZusJNq\n/L6SHykE05tmAVsUhxLh2iCEX0zRT+wQw+wYLKoKXSm9JoPhGROVdWP7MZT+Vg0w\nrnby35q7RB3IbPvffV+35t4=\n-----END PRIVATE KEY-----"
-
-  public-key: "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA3+452Py5MG9mds3/vz27\nCBbRzb49oIGp2twymD0X2Gg33aIS1ILcOJ8cKevaK4WViVDVFnPztbrjkQSls9MA\npFSF54ENXrwHMwq/CG1joZgi2Ixh2epvhPr4/qRffDbaaJL1dVAqTFeVoZhHmRyx\noTeOdBiPuDtNikkJAAIXX9Twd77VC0PgfLdyqdUdEIHYnVKdRUOMT6SqMFZXDM17\nUKUTYBRSQB5F7pDlXMoQeIMXP/ovu9fuygnh4JV3jOr7+oQm3/SGst/Jpb69flWn\nuXIQMuGQs6DN4ZvANAQVPfZXqHPWUZYeY1jSfb9xjaVjM2HmnP9E6KfpEPz0c5aI\nAQIDAQAB\n-----END PUBLIC KEY-----"
+  private-key: ${JWT_PRIVATE_KEY}
+  public-key: ${JWT_PUBLIC_KEY}
 
 api:
   prefix: api
@@ -63,3 +68,13 @@ api:
 user:
   avatar:
     upload-dir: uploads/avatar
+
+# WebRTC Configuration
+webrtc:
+  ice-servers:
+    - urls: stun:stun.l.google.com:19302
+    - urls: stun:stun1.l.google.com:19302
+    # Add your TURN servers here for production
+    # - urls: turn:your-turn-server.com:3478
+    #   username: your-username
+    #   credential: your-password
