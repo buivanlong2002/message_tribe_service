@@ -20,6 +20,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         registry.addEndpoint("/ws")
                 .setAllowedOriginPatterns(
                         "https://tomotalk.netlify.app",
+                        "https://tribe-frontend-production-4eb9.up.railway.app/",
                         "http://localhost:3000"
                 )
                 .withSockJS(); // nếu bạn cần hỗ trợ trình duyệt cũ
