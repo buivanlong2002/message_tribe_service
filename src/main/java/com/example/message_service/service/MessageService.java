@@ -368,5 +368,242 @@ public class MessageService {
         return ApiResponse.success("00", "Tìm kiếm thành công", responseList);
     }
 
+    /**
+     * Chuyển tiếp tin nhắn đến một hoặc nhiều cuộc trò chuyện
+     */
+    public ApiResponse<List<MessageResponse>> forwardMessage(String messageId, String senderId, List<String> targetConversationIds) {
+        // Kiểm tra tin nhắn gốc
+        Message originalMessage = messageRepository.findById(messageId)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy tin nhắn để chuyển tiếp"));
+
+        // Kiểm tra người gửi
+        User sender = userRepository.findById(senderId)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy người gửi"));
+
+        List<MessageResponse> forwardedMessages = new ArrayList<>();
+
+        for (String targetConversationId : targetConversationIds) {
+            // Kiểm tra cuộc trò chuyện đích
+            Conversation targetConversation = conversationRepository.findById(targetConversationId)
+                    .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy cuộc trò chuyện đích: " + targetConversationId));
+
+            // Kiểm tra người gửi có trong cuộc trò chuyện đích không
+            boolean isMember = conversationMemberRepository.existsByConversationIdAndUserId(targetConversationId, senderId);
+            if (!isMember) {
+                continue; // Bỏ qua nếu không phải thành viên
+            }
+
+            // Tạo tin nhắn chuyển tiếp
+            Message forwardedMessage = new Message();
+            forwardedMessage.setId(UUID.randomUUID().toString());
+            forwardedMessage.setSender(sender);
+            forwardedMessage.setConversation(targetConversation);
+            forwardedMessage.setMessageType(originalMessage.getMessageType());
+            forwardedMessage.setContent(originalMessage.getContent());
+            forwardedMessage.setCreatedAt(LocalDateTime.now());
+            forwardedMessage.setEdited(false);
+            forwardedMessage.setSeen(false);
+            forwardedMessage.setRecalled(false);
+
+            // Chuyển tiếp file đính kèm nếu có
+            if (originalMessage.getAttachments() != null && !originalMessage.getAttachments().isEmpty()) {
+                List<Attachment> forwardedAttachments = new ArrayList<>();
+                for (Attachment originalAttachment : originalMessage.getAttachments()) {
+                    Attachment newAttachment = new Attachment();
+                    newAttachment.setId(UUID.randomUUID().toString());
+                    newAttachment.setMessage(forwardedMessage);
+                    newAttachment.setOriginalFileName(originalAttachment.getOriginalFileName());
+                    newAttachment.setFileUrl(originalAttachment.getFileUrl());
+                    newAttachment.setFileType(originalAttachment.getFileType());
+                    newAttachment.setFileSize(originalAttachment.getFileSize());
+                    forwardedAttachments.add(newAttachment);
+                }
+                forwardedMessage.setAttachments(forwardedAttachments);
+            }
+
+            // Lưu tin nhắn chuyển tiếp
+            Message savedMessage = messageRepository.save(forwardedMessage);
+
+            // Tạo MessageStatus cho tin nhắn chuyển tiếp
+            List<ConversationMember> members = conversationMemberRepository.findByConversationId(targetConversationId);
+            for (ConversationMember member : members) {
+                MessageStatus status = new MessageStatus();
+                status.setId(UUID.randomUUID().toString());
+                status.setMessage(savedMessage);
+                status.setUser(member.getUser());
+                status.setStatus(MessageStatusEnum.SENT);
+                messageStatusRepository.save(status);
+            }
+
+            // Mapping sang DTO
+            MessageResponse response = messageMapper.toMessageResponse(savedMessage);
+            forwardedMessages.add(response);
+
+            // Gửi thông báo đến các thành viên của cuộc trò chuyện đích
+            pushNewMessage.pushNewMessageToConversation(targetConversationId, response);
+            
+            // Cập nhật danh sách cuộc trò chuyện cho các thành viên
+            for (ConversationMember member : members) {
+                if (!member.getUser().getId().equals(senderId)) {
+                    pushNewMessage.pushUpdatedConversationsToMemBer(targetConversationId, member.getUser().getId());
+                }
+            }
+        }
+
+        // Cập nhật trạng thái tin nhắn gốc thành đã xem cho người chuyển tiếp
+        try {
+            System.out.println("🔄 Đang cập nhật trạng thái tin nhắn gốc - MessageId: " + messageId + ", SenderId: " + senderId);
+            System.out.println("🔄 Tin nhắn gốc thuộc conversation: " + originalMessage.getConversation().getId());
+            System.out.println("🔄 Người gửi tin nhắn gốc: " + originalMessage.getSender().getId());
+            
+            // 1. Đánh dấu tin nhắn gốc là đã xem cho người chuyển tiếp
+            MessageStatus originalMessageStatus = messageStatusRepository.findByMessageIdAndUserId(messageId, senderId);
+            if (originalMessageStatus != null) {
+                System.out.println("✅ Tìm thấy MessageStatus cũ, đang cập nhật...");
+                originalMessageStatus.setStatus(MessageStatusEnum.SEEN);
+                originalMessageStatus.setUpdatedAt(LocalDateTime.now());
+                messageStatusRepository.save(originalMessageStatus);
+                System.out.println("✅ Đã cập nhật MessageStatus thành SEEN");
+            } else {
+                System.out.println("⚠️ Không tìm thấy MessageStatus, đang tạo mới...");
+                // Tạo mới MessageStatus nếu chưa có
+                MessageStatus newStatus = new MessageStatus();
+                newStatus.setId(UUID.randomUUID().toString());
+                newStatus.setMessage(originalMessage);
+                newStatus.setUser(sender);
+                newStatus.setStatus(MessageStatusEnum.SEEN);
+                newStatus.setUpdatedAt(LocalDateTime.now());
+                messageStatusRepository.save(newStatus);
+                System.out.println("✅ Đã tạo mới MessageStatus với status SEEN");
+            }
+            
+            // 2. Đánh dấu tất cả tin nhắn chưa xem trong các conversation đích thành đã xem
+            for (String targetConversationId : targetConversationIds) {
+                System.out.println("🔄 Đang đánh dấu tất cả tin nhắn chưa xem trong conversation: " + targetConversationId);
+                
+                // Sử dụng method markAllAsSeen có sẵn
+                Integer updatedCount = messageStatusRepository.markAllAsSeen(targetConversationId, senderId);
+                System.out.println("✅ Đã đánh dấu " + updatedCount + " tin nhắn thành đã xem trong conversation: " + targetConversationId);
+            }
+            
+            // Gửi thông báo cập nhật trạng thái
+            System.out.println("🔄 Đang gửi WebSocket notification...");
+            pushNewMessage.pushUpdatedConversationsToUser(senderId);
+            System.out.println("✅ Đã gửi WebSocket notification");
+            
+        } catch (Exception e) {
+            // Log lỗi nhưng không ảnh hưởng đến việc chuyển tiếp
+            System.err.println("❌ Lỗi khi cập nhật trạng thái tin nhắn gốc: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return ApiResponse.success("00", "Chuyển tiếp tin nhắn thành công", forwardedMessages);
+    }
+
+    /**
+     * Xóa tin nhắn (chỉ xóa cho người dùng cụ thể)
+     */
+    public ApiResponse<String> deleteMessage(String messageId, String userId, String conversationId) {
+        // Kiểm tra tin nhắn
+        Message message = messageRepository.findById(messageId)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy tin nhắn"));
+
+        // Kiểm tra cuộc trò chuyện
+        if (!conversationRepository.existsById(conversationId)) {
+            return ApiResponse.error("01", "Không tìm thấy cuộc trò chuyện");
+        }
+
+        // Kiểm tra người dùng có trong cuộc trò chuyện không
+        boolean isMember = conversationMemberRepository.existsByConversationIdAndUserId(conversationId, userId);
+        if (!isMember) {
+            return ApiResponse.error("03", "Bạn không có quyền xóa tin nhắn trong cuộc trò chuyện này");
+        }
+
+        // Kiểm tra xem đã có UserMessage record chưa
+        Optional<UserMessage> existingUserMessage = userMessageRepository.findByUserIdAndMessageId(userId, messageId);
+        
+        UserMessage userMessage;
+        if (existingUserMessage.isPresent()) {
+            userMessage = existingUserMessage.get();
+        } else {
+            // Tạo mới UserMessage record nếu chưa có
+            userMessage = new UserMessage();
+            userMessage.setId(UUID.randomUUID().toString());
+            userMessage.setUserId(userId);
+            userMessage.setMessageId(messageId);
+            userMessage.setConversationId(conversationId);
+        }
+
+        // Đánh dấu tin nhắn đã bị xóa
+        userMessage.setDeleted(true);
+        userMessage.setDeletedAt(LocalDateTime.now());
+        userMessageRepository.save(userMessage);
+
+        // Gửi thông báo đến các thành viên khác trong cuộc trò chuyện
+        List<ConversationMember> members = conversationMemberRepository.findByConversationId(conversationId);
+        for (ConversationMember member : members) {
+            if (!member.getUser().getId().equals(userId)) {
+                // Gửi thông báo xóa tin nhắn
+                Map<String, Object> deleteNotification = new HashMap<>();
+                deleteNotification.put("type", "MESSAGE_DELETED");
+                deleteNotification.put("messageId", messageId);
+                deleteNotification.put("conversationId", conversationId);
+                deleteNotification.put("deletedBy", userId);
+                
+                messagingTemplate.convertAndSend(
+                    "/topic/message-deleted/" + member.getUser().getId(),
+                    deleteNotification
+                );
+            }
+        }
+
+        return ApiResponse.success("00", "Xóa tin nhắn thành công", "Tin nhắn đã được xóa");
+    }
+
+    /**
+     * Xóa tin nhắn vĩnh viễn (chỉ người gửi mới có quyền)
+     */
+    public ApiResponse<String> permanentlyDeleteMessage(String messageId, String userId) {
+        // Kiểm tra tin nhắn
+        Message message = messageRepository.findById(messageId)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy tin nhắn"));
+
+        // Kiểm tra quyền (chỉ người gửi mới có quyền xóa vĩnh viễn)
+        if (!message.getSender().getId().equals(userId)) {
+            return ApiResponse.error("03", "Bạn không có quyền xóa vĩnh viễn tin nhắn này");
+        }
+
+        // Xóa tất cả UserMessage records liên quan
+        List<UserMessage> userMessages = userMessageRepository.findByMessageId(messageId);
+        userMessageRepository.deleteAll(userMessages);
+
+        // Xóa tất cả MessageStatus records liên quan
+        List<MessageStatus> messageStatuses = messageStatusRepository.findByMessageId(messageId);
+        messageStatusRepository.deleteAll(messageStatuses);
+
+        // Xóa tin nhắn
+        messageRepository.delete(message);
+
+        // Gửi thông báo đến tất cả thành viên trong cuộc trò chuyện
+        List<ConversationMember> members = conversationMemberRepository.findByConversationId(message.getConversation().getId());
+        for (ConversationMember member : members) {
+            if (!member.getUser().getId().equals(userId)) {
+                // Gửi thông báo xóa vĩnh viễn tin nhắn
+                Map<String, Object> deleteNotification = new HashMap<>();
+                deleteNotification.put("type", "MESSAGE_PERMANENTLY_DELETED");
+                deleteNotification.put("messageId", messageId);
+                deleteNotification.put("conversationId", message.getConversation().getId());
+                deleteNotification.put("deletedBy", userId);
+                
+                messagingTemplate.convertAndSend(
+                    "/topic/message-permanently-deleted/" + member.getUser().getId(),
+                    deleteNotification
+                );
+            }
+        }
+
+        return ApiResponse.success("00", "Xóa vĩnh viễn tin nhắn thành công", "Tin nhắn đã được xóa vĩnh viễn");
+    }
+
 
 }

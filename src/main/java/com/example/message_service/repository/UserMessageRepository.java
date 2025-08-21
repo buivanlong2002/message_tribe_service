@@ -32,4 +32,7 @@ public interface UserMessageRepository extends JpaRepository<UserMessage, String
     @Transactional
     @Query("UPDATE UserMessage um SET um.isDeleted = false, um.deletedAt = null WHERE um.userId = :userId AND um.conversationId = :conversationId AND um.isDeleted = true")
     int restoreMessagesForUser(@Param("userId") String userId, @Param("conversationId") String conversationId);
+    
+    // Tìm tất cả UserMessage theo messageId
+    List<UserMessage> findByMessageId(String messageId);
 }

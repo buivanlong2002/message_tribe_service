@@ -3,6 +3,8 @@ package com.example.message_service.controller;
 import com.example.message_service.dto.ApiResponse;
 import com.example.message_service.dto.request.EditMessageRequest;
 import com.example.message_service.dto.request.SendMessageRequest;
+import com.example.message_service.dto.request.ForwardMessageRequest;
+import com.example.message_service.dto.request.DeleteMessageRequest;
 import com.example.message_service.dto.response.MessageResponse;
 import com.example.message_service.model.Message;
 import com.example.message_service.model.MessageType;
@@ -115,6 +117,37 @@ public class MessageController {
             @RequestParam(defaultValue = "20") int size
     ) {
         return messageService.searchMessagesByKeyword(conversationId, keyword, page, size);
+    }
+
+    /**
+     * Chuyển tiếp tin nhắn đến một hoặc nhiều cuộc trò chuyện
+     */
+    @PostMapping("/forward")
+    public ApiResponse<List<MessageResponse>> forwardMessage(@RequestBody ForwardMessageRequest request) {
+        return messageService.forwardMessage(request.getMessageId(), request.getSenderId(), request.getTargetConversationIds());
+    }
+
+    /**
+     * Xóa tin nhắn (chỉ xóa cho người dùng cụ thể)
+     */
+    @DeleteMapping("/{messageId}")
+    public ApiResponse<String> deleteMessage(
+            @PathVariable String messageId,
+            @RequestParam String userId,
+            @RequestParam String conversationId
+    ) {
+        return messageService.deleteMessage(messageId, userId, conversationId);
+    }
+
+    /**
+     * Xóa tin nhắn vĩnh viễn (chỉ người gửi mới có quyền)
+     */
+    @DeleteMapping("/{messageId}/permanent")
+    public ApiResponse<String> permanentlyDeleteMessage(
+            @PathVariable String messageId,
+            @RequestParam String userId
+    ) {
+        return messageService.permanentlyDeleteMessage(messageId, userId);
     }
 
 
