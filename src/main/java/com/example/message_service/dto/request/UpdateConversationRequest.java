@@ -13,5 +13,6 @@ public class UpdateConversationRequest {
     @JsonProperty("isGroup")
     @Column(name = "is_group", nullable = false)
     private boolean group;
+    private String requesterId; // ID của người thực hiện thao tác
 }
 

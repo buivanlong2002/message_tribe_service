@@ -95,4 +95,11 @@ public class UserController {
         List<User> users = userService.searchByDisplayName(name);
         return ApiResponse.success("Tìm kiếm thành công", users);
     }
+
+    // Tìm người dùng theo số điện thoại
+    @GetMapping("/search-by-phone")
+    public ApiResponse<List<User>> searchUsersByPhoneNumber(@RequestParam String phone) {
+        List<User> users = userService.searchByPhoneNumber(phone);
+        return ApiResponse.success("Tìm kiếm thành công", users);
+    }
 }

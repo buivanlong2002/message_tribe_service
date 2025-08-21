@@ -57,9 +57,10 @@ public class MessageController {
     public ApiResponse<List<MessageResponse>> getMessages(
             @RequestParam String conversationId,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String userId
     ) {
-        return messageService.getMessagesByConversation(conversationId, page, size);
+        return messageService.getMessagesByConversation(conversationId, page, size, userId);
     }
 
 

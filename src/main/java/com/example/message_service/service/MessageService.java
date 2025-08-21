@@ -43,6 +43,7 @@ public class MessageService {
     @Autowired private MessageStatusRepository messageStatusRepository;
     @Autowired private SimpMessagingTemplate messagingTemplate;
     @Autowired private CallHistoryService callHistoryService;
+    @Autowired private UserMessageRepository userMessageRepository;
 
     private static final long MAX_VIDEO_SIZE = 100 * 1024 * 1024;
 
@@ -188,7 +189,10 @@ public class MessageService {
             }
         }
 
-        // 12. Trả về kết quả
+        // 12. Gửi tin nhắn mới đến tất cả thành viên trong conversation
+        pushNewMessage.pushNewMessageToConversation(conversation.getId(), response);
+
+        // 13. Trả về kết quả
         return ApiResponse.success("00", "Gửi tin nhắn thành công", response);
     }
 
@@ -202,6 +206,11 @@ public class MessageService {
 
     @Transactional
     public ApiResponse<List<MessageResponse>> getMessagesByConversation(String conversationId, int page, int size) {
+        return getMessagesByConversation(conversationId, page, size, null);
+    }
+
+    @Transactional
+    public ApiResponse<List<MessageResponse>> getMessagesByConversation(String conversationId, int page, int size, String userId) {
         if (!conversationRepository.existsById(conversationId)) {
             return ApiResponse.error("01", "Không tìm thấy cuộc trò chuyện với ID: " + conversationId);
         }
@@ -209,6 +218,14 @@ public class MessageService {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<Message> messagePage = messageRepository.findByConversationId(conversationId, pageable);
         List<Message> messages = messagePage.getContent();
+
+        // Lọc ra những tin nhắn đã bị user xóa
+        if (userId != null) {
+            List<String> deletedMessageIds = userMessageRepository.findDeletedMessageIdsByUserAndConversation(userId, conversationId);
+            messages = messages.stream()
+                    .filter(message -> !deletedMessageIds.contains(message.getId()))
+                    .collect(Collectors.toList());
+        }
 
         // Lấy toàn bộ messageId
         List<String> messageIds = messages.stream()

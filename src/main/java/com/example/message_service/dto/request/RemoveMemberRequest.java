@@ -11,6 +11,6 @@ import java.util.UUID;
 public class RemoveMemberRequest {
     private UUID conversationId;
     private UUID userId;
-
+    private UUID requesterId; // ID của người thực hiện thao tác
 }
 

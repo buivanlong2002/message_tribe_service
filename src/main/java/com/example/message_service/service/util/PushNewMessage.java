@@ -49,6 +49,30 @@ public class PushNewMessage {
         }
     }
 
+    /**
+     * Gửi tin nhắn mới đến tất cả thành viên trong conversation
+     */
+    public void pushNewMessageToConversation(String conversationId, MessageResponse message) {
+        try {
+            // Tạo payload cho tin nhắn mới
+            var payload = new java.util.HashMap<String, Object>();
+            payload.put("type", "NEW_MESSAGE");
+            payload.put("conversationId", conversationId);
+            payload.put("message", message);
+            
+            // Gửi đến topic của conversation
+            String destination = "/topic/conversation/" + conversationId;
+            messagingTemplate.convertAndSend(destination, payload);
+            
+            log.info("📨 Đã gửi tin nhắn mới đến conversation {}: {}", conversationId, message.getContent());
+            log.info("📨 Destination: {}", destination);
+            log.info("📨 Payload: {}", payload);
+        } catch (Exception e) {
+            log.error("❌ Lỗi khi gửi tin nhắn mới đến conversation {}: {}", conversationId, e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
 
 
 }

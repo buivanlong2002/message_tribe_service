@@ -28,11 +28,16 @@ public class ConversationMemberService {
 
     // Thêm 1 thành viên (mặc định role = "member")
     public ApiResponse<String> addMemberToConversation(String conversationId, String userId) {
-        return addMemberToConversation(conversationId, userId, "member");
+        return addMemberToConversation(conversationId, userId, "member", null);
     }
 
-    // Thêm thành viên với role cụ thể (dùng cho 1-1 hoặc nhóm)
-    public ApiResponse<String> addMemberToConversation(String conversationId, String userId, String role) {
+    // Thêm thành viên với requesterId (mặc định role = "member")
+    public ApiResponse<String> addMemberToConversation(String conversationId, String userId, String requesterId) {
+        return addMemberToConversation(conversationId, userId, "member", requesterId);
+    }
+
+    // Thêm thành viên với kiểm tra quyền (ai cũng được thêm)
+    public ApiResponse<String> addMemberToConversation(String conversationId, String userId, String role, String requesterId) {
         Optional<Conversation> optionalConversation = conversationRepository.findById(conversationId);
         Optional<User> optionalUser = userRepository.findById(userId);
 
@@ -46,6 +51,8 @@ public class ConversationMemberService {
 
         Conversation conversation = optionalConversation.get();
         User user = optionalUser.get();
+
+        // Không kiểm tra quyền - ai cũng được thêm thành viên
 
         boolean isMember = conversationMemberRepository.existsByConversationIdAndUserId(conversationId, userId);
         if (isMember) {
@@ -106,6 +113,11 @@ public class ConversationMemberService {
 
     // Xóa thành viên khỏi cuộc trò chuyện
     public ApiResponse<String> removeMemberFromConversation(String conversationId, String userId) {
+        return removeMemberFromConversation(conversationId, userId, null);
+    }
+
+    // Xóa thành viên với kiểm tra quyền (ai cũng được xóa)
+    public ApiResponse<String> removeMemberFromConversation(String conversationId, String userId, String requesterId) {
         Optional<Conversation> optionalConversation = conversationRepository.findById(conversationId);
         Optional<User> optionalUser = userRepository.findById(userId);
 
@@ -116,6 +128,8 @@ public class ConversationMemberService {
         if (optionalUser.isEmpty()) {
             return ApiResponse.error("03", "Không tìm thấy người dùng: " + userId);
         }
+
+        // Không kiểm tra quyền - ai cũng được xóa thành viên
 
         boolean isMember = conversationMemberRepository.existsByConversationIdAndUserId(conversationId, userId);
         if (!isMember) {
