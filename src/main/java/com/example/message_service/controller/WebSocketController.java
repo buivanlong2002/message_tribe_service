@@ -61,7 +61,7 @@ public class WebSocketController {
         }
 
         ApiResponse<List<MessageResponse>> response = messageService.getMessagesByConversation(
-                conversationId, page, size);
+                conversationId, page, size, userId);
 
         if (response.getData() != null) {
             String destination = "/topic/messages/" + conversationId + "/" + userId;

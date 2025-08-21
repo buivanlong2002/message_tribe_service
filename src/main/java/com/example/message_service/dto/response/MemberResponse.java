@@ -10,4 +10,5 @@ public class MemberResponse {
     private String id;
     private String displayName;
     private String avatarUrl;
+    private String role;
 }

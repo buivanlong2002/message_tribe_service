@@ -59,7 +59,7 @@ public class ConversationController {
     public ResponseEntity<ApiResponse<ConversationResponse>> updateConversation(
             @PathVariable String conversationId,
             @RequestBody UpdateConversationRequest request) {
-        ApiResponse<ConversationResponse> response = conversationService.updateConversation(conversationId, request);
+        ApiResponse<ConversationResponse> response = conversationService.updateConversation(conversationId, request, request.getRequesterId());
         return ResponseEntity.ok(response);
     }
 
@@ -68,6 +68,16 @@ public class ConversationController {
     public ResponseEntity<String> archiveConversation(@PathVariable String conversationId) {
         conversationService.archiveConversation(conversationId);
         return ResponseEntity.ok("Conversation archived");
+    }
+
+    // Xóa nhóm (chỉ creator mới được xóa)
+    @DeleteMapping("/{conversationId}/delete")
+    public ResponseEntity<ApiResponse<String>> deleteGroup(
+            @PathVariable String conversationId,
+            @RequestParam String requesterId) {
+        ApiResponse<String> response = conversationService.deleteGroup(conversationId, requesterId);
+        HttpStatus status = response.getStatus().isSuccess() ? HttpStatus.OK : HttpStatus.BAD_REQUEST;
+        return new ResponseEntity<>(response, status);
     }
 
     // Upload avatar nhóm (chỉ người tạo nhóm được phép)
@@ -85,5 +95,35 @@ public class ConversationController {
             @PathVariable String userId) {
         ApiResponse<List<ConversationResponse>> response = conversationService.getConversationsByUser(userId);
         return ResponseEntity.ok(response);
+    }
+
+    // Xóa cuộc trò chuyện 1 phía (chỉ ẩn khỏi danh sách của user hiện tại)
+    @DeleteMapping("/{conversationId}/delete-for-user")
+    public ResponseEntity<ApiResponse<String>> deleteConversationForUser(
+            @PathVariable String conversationId,
+            @RequestParam String userId) {
+        ApiResponse<String> response = conversationService.deleteConversationForUser(conversationId, userId);
+        HttpStatus status = response.getStatus().isSuccess() ? HttpStatus.OK : HttpStatus.BAD_REQUEST;
+        return new ResponseEntity<>(response, status);
+    }
+
+    // Khôi phục cuộc trò chuyện đã bị xóa
+    @PutMapping("/{conversationId}/restore-for-user")
+    public ResponseEntity<ApiResponse<String>> restoreConversationForUser(
+            @PathVariable String conversationId,
+            @RequestParam String userId) {
+        ApiResponse<String> response = conversationService.restoreConversationForUser(conversationId, userId);
+        HttpStatus status = response.getStatus().isSuccess() ? HttpStatus.OK : HttpStatus.BAD_REQUEST;
+        return new ResponseEntity<>(response, status);
+    }
+
+    // Khôi phục tin nhắn đã bị xóa trong conversation
+    @PutMapping("/{conversationId}/restore-messages")
+    public ResponseEntity<ApiResponse<String>> restoreMessagesInConversation(
+            @PathVariable String conversationId,
+            @RequestParam String userId) {
+        ApiResponse<String> response = conversationService.restoreMessagesInConversation(conversationId, userId);
+        HttpStatus status = response.getStatus().isSuccess() ? HttpStatus.OK : HttpStatus.BAD_REQUEST;
+        return new ResponseEntity<>(response, status);
     }
 }

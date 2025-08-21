@@ -30,6 +30,9 @@ public interface UserRepository extends JpaRepository<User, String> {
     // Tìm người dùng theo tên hiển thị (không phân biệt hoa thường)
     List<User> findByDisplayNameContainingIgnoreCase(String displayName);
 
+    // Tìm người dùng theo số điện thoại (không phân biệt hoa thường)
+    List<User> findByPhoneNumberContainingIgnoreCase(String phoneNumber);
+
     // Tìm người dùng theo tên hiển thị với phân trang
     Page<User> findByDisplayNameContainingIgnoreCase(String displayName, Pageable pageable);
 

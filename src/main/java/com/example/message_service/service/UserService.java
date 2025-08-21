@@ -376,6 +376,15 @@ public class UserService {
         return userRepository.findByDisplayNameContainingIgnoreCase(displayName);
     }
 
+    public List<User> searchByPhoneNumber(String phoneNumber) {
+        // Tìm kiếm chính xác theo số điện thoại
+        Optional<User> userOpt = userRepository.findByPhoneNumber(phoneNumber);
+        if (userOpt.isPresent()) {
+            return List.of(userOpt.get());
+        }
+        return List.of();
+    }
+
     // lấy người dùng theo id
     public User getUserById(String userId) {
         return userRepository.findById(userId).orElse(null);

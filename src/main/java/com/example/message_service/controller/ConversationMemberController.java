@@ -28,7 +28,8 @@ public class ConversationMemberController {
     public ApiResponse<String> addMember(@RequestBody AddMemberRequest addMemberRequest) {
         String uuidStringConversationId = addMemberRequest.getConversationId().toString();
         String uuidStringUserId = addMemberRequest.getUserId().toString();
-        return conversationMemberService.addMemberToConversation(uuidStringConversationId, uuidStringUserId);
+        String requesterId = addMemberRequest.getRequesterId() != null ? addMemberRequest.getRequesterId().toString() : null;
+        return conversationMemberService.addMemberToConversation(uuidStringConversationId, uuidStringUserId, requesterId);
     }
 
     // Lấy danh sách thành viên trong một cuộc trò chuyện
@@ -44,6 +45,7 @@ public class ConversationMemberController {
     public ApiResponse<String> removeMember(@RequestBody RemoveMemberRequest removeMemberRequest) {
         String uuidStringConversationId = removeMemberRequest.getConversationId().toString();
         String uuidStringUserId = removeMemberRequest.getUserId().toString();
-        return conversationMemberService.removeMemberFromConversation(uuidStringConversationId, uuidStringUserId);
+        String requesterId = removeMemberRequest.getRequesterId() != null ? removeMemberRequest.getRequesterId().toString() : null;
+        return conversationMemberService.removeMemberFromConversation(uuidStringConversationId, uuidStringUserId, requesterId);
     }
 }
